@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 )
+var NewickFlag bool = true
 
 func main() {
 	D := [][]float64{
@@ -12,35 +13,31 @@ func main() {
 		{21, 12, 0, 14},
 		{27, 18, 14, 0},
 	}
-
-	neighbourJoin(D)
+	labels := []string{
+		"A","B","C","D",
+	}
+	neighbourJoin(D, labels)
 }
 
-func neighbourJoin(D [][]float64) {
+func neighbourJoin(D [][]float64, labels []string) {
 	n := len(D)
 	M := make([][]float64, n)
 	for i := range M {
 		M[i] = make([]float64, n)
 	}
 	r := make([]float64, n)
-	print(len(M[0]))
 
 	print("D\n")
 	for i := 0; i < n; i++ {
-
 		fmt.Println(D[i])
 	}
-
+	print("\n")
 	for i, row := range M {
 		sum := 0.0
 		for j := range row {
 			sum = sum + D[i][j]
-			print(D[i][j])
-			print("\n")
 		}
 		r[i] = sum / float64(n-2)
-		print(r[i])
-		print("\n")
 	}
 
 	cur_val := math.MaxFloat64
@@ -64,34 +61,36 @@ func neighbourJoin(D [][]float64) {
 	}
 
 
-	//Distance to new point where they meet
-	v_iu := D[cur_i][cur_j]/2 + (r[cur_i]-r[cur_j])/2
-	v_ju := D[cur_i][cur_j]/2 + (r[cur_j]-r[cur_i])/2
+	if NewickFlag{
+		//Distance to new point where they meet
+		v_iu := fmt.Sprintf("%f",D[cur_i][cur_j]/2 + (r[cur_i]-r[cur_j])/2)
+		v_ju := fmt.Sprintf("%f",D[cur_i][cur_j]/2 + (r[cur_j]-r[cur_i])/2)
+		fmt.Println(v_iu)
+		fmt.Println(v_iu)
+
+		//creating newick form
+		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
+		labels = append(labels[:cur_j], labels[cur_j+1:]...)
+	}
 
 	D_new := createNewDistanceMatrix(D, cur_i, cur_j)
-	print("\n")
-	print(v_iu, v_ju)
-
-	print("M\n")
-
-	for i := 0; i < n; i++ {
-		fmt.Println(M[i])
+	
+	for i := 0; i < len(labels); i++ {
+		fmt.Println(labels[i])
 	}
 
 	//stop maybe
 	if len(D_new) > 2{
-		neighbourJoin(D_new)
+		neighbourJoin(D_new ,labels)
 	}else{
+        newick := "(" + labels[cur_i] + ":" + fmt.Sprintf("%f",D_new[cur_i][cur_j] / 2 ) +  "," + labels[cur_j] + ":" + fmt.Sprintf("%f",D_new[cur_i][cur_j] / 2 )+ ");"
+        fmt.Println(newick)
 		return
 	}
 
 }
 
 func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64{
-
-	for i := 0; i < len(D); i++ {
-		fmt.Println(D[i])
-	}
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k{
@@ -111,10 +110,6 @@ func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64{
 
 	for i := 0; i < len(D_new); i++ {
 		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
-	}
-
-	for i := 0; i < len(D_new); i++ {
-		fmt.Println(D_new[i])
 	}
 
 	return D_new

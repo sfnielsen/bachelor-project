@@ -27,6 +27,8 @@ def neighbour_join(D,labels):
     #i and j distances to new node u
     v_iu = D[p_i,p_j]/2 + (r[p_i]-r[p_j])/2
     v_ju = D[p_i,p_j]/2 + (r[p_j]-r[p_i])/2
+    print(v_iu)
+    print(v_ju)
     #creating newick form
     labels[p_i] = ("(" + labels[p_i] + ":" + str(v_iu) + "," + labels[p_j] + ":" + str(v_ju) + ")")
     labels = np.delete(labels, p_j)
@@ -90,5 +92,5 @@ if __name__ == "__main__":
                   [27,18,14,0]])
     labels = np.array(["A","B","C","D"], type(str))
         
-        
+
     main(D,labels)
