@@ -43,7 +43,10 @@ def neighbour_join(D,labels):
         tree = Phylo.read(input, "newick")
         print(tree)
         Phylo.draw(tree)
-        
+    print("M")
+    print(M)
+    print("D")
+    print(D)
 
 
 def compute_new_dist_mat(D,p_i ,p_j, labels):
@@ -65,7 +68,7 @@ def compute_new_dist_mat(D,p_i ,p_j, labels):
     return D, labels
 
 if __name__ == "__main__":
-    
+    """
     D = np.array(
         [
             [  0,  5,  68,  57, 127,  27,  28,  33],
@@ -86,6 +89,6 @@ if __name__ == "__main__":
                   [21,12,0,14],
                   [27,18,14,0]])
     labels = np.array(["A","B","C","D"], type(str))
-    """
+        
         
     main(D,labels)
