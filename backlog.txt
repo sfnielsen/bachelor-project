@@ -1,0 +1,2 @@
+Husk at tage højde for i == j casen når vi skal til at lave lookups, da den altid er mindst
+

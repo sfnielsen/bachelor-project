@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"sort"
 )
 
 var NewickFlag bool = true
@@ -27,7 +28,7 @@ func main() {
 	neighborJoin(M, D, labels)
 }
 
-func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int){
+func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int) {
 	cur_val := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
@@ -51,24 +52,46 @@ func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) 
 
 }
 
-type Tuple struct{
-	value float64
+type Tuple struct {
+	value   float64
 	index_j int
 }
 
-func rapidNeighborJoining(M [][]float64, r []float64, D [][]float64, n int){
-	S := M
-	i := M 
+func rapidNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int) {
+	S := make([][]Tuple, n)
+	for i := range S {
+		S[i] = make([]Tuple, n)
+	}
+
 	for i := 0; i < n; i++ {
-		for j := 0; j <n; j++ {
-			tuple := new(Tuple)
-			tuple.value = M[i][j]
+		for j := 0; j < n; j++ {
+			var tuple Tuple
+			tuple.value = D[i][j]
 			tuple.index_j = j
+
+			S[i][j] = tuple
+
 		}
+
+		//sorting row in S
+		sort.Slice(S[i], func(a, b int) bool {
+			return (S[i][a].value < S[i][b].value)
+		})
+
+		fmt.Println(S[i])
+		fmt.Println("sawwaw")
+
 	}
-	for i := range M {
-		S[i] = make([]float64, n)
-	}
+	//
+	//
+	//
+	// Some code to find desired pair to join
+	//
+	//
+	//
+
+	return 1, 1 // haha test
+
 }
 
 func neighborJoin(M [][]float64, D [][]float64, labels []string) {
@@ -89,8 +112,7 @@ func neighborJoin(M [][]float64, D [][]float64, labels []string) {
 		r[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := canonicalNeighborJoining(M, r, D, n)
-	
+	cur_i, cur_j := rapidNeighborJoining(M, r, D, n)
 
 	if NewickFlag {
 		//Distance to new point where they meet
@@ -113,7 +135,7 @@ func neighborJoin(M [][]float64, D [][]float64, labels []string) {
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, labels)
+		neighborJoin(M, D_new, labels)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[cur_i] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + "," + labels[cur_j] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + ");"

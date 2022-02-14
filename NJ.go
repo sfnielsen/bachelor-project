@@ -21,7 +21,7 @@ func main() {
 	neighborJoin(D, labels)
 }
 
-func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int) {
+func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) (int, int) {
 	cur_val := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
@@ -29,12 +29,12 @@ func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) 
 		for j := 0; j < n; j++ {
 
 			if i == j {
-				M[i][j] = 0
+				Q[i][j] = 0
 			} else {
-				M[i][j] = D[i][j] - r[i] - r[j]
+				Q[i][j] = D[i][j] - r[i] - r[j]
 
-				if M[i][j] < cur_val {
-					cur_val = M[i][j]
+				if Q[i][j] < cur_val {
+					cur_val = Q[i][j]
 					cur_i = i
 					cur_j = j
 				}
@@ -50,26 +50,25 @@ type Tuple struct {
 	index_j int
 }
 
-func rapidNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) {
-	S := M
-	i := M
+func rapidNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) {
+	S := Q
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
 			tuple := new(Tuple)
-			tuple.value = M[i][j]
+			tuple.value = Q[i][j]
 			tuple.index_j = j
 		}
 	}
-	for i := range M {
+	for i := range Q {
 		S[i] = make([]float64, n)
 	}
 }
 
 func neighborJoin(D [][]float64, labels []string) {
 	n := len(D)
-	M := make([][]float64, n)
-	for i := range M {
-		M[i] = make([]float64, n)
+	Q := make([][]float64, n)
+	for i := range Q {
+		Q[i] = make([]float64, n)
 	}
 	r := make([]float64, n)
 
@@ -78,7 +77,7 @@ func neighborJoin(D [][]float64, labels []string) {
 		fmt.Println(D[i])
 	}
 	print("\n")
-	for i, row := range M {
+	for i, row := range Q {
 		sum := 0.0
 		for j := range row {
 			sum = sum + D[i][j]
@@ -86,7 +85,7 @@ func neighborJoin(D [][]float64, labels []string) {
 		r[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := canonicalNeighborJoining(M, r, D, n)
+	cur_i, cur_j := canonicalNeighborJoining(Q, r, D, n)
 
 	if NewickFlag {
 		//Distance to new point where they meet
