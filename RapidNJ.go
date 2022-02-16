@@ -17,19 +17,19 @@ func main() {
 		{27, 18, 14, 0},
 	}
 	n := len(D)
-	M := make([][]float64, n)
-	for i := range M {
-		M[i] = make([]float64, n)
+	Q := make([][]float64, n)
+	for i := range Q {
+		Q[i] = make([]float64, n)
 	}
 
 	labels := []string{
 		"A", "B", "C", "D",
 	}
-	neighborJoin(M, D, labels)
+	neighborJoin(Q, D, labels)
 }
 
 func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int) {
-	cur_val := math.MaxFloat64
+	cur_val := -math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
 	for i := 0; i < n; i++ {
@@ -44,6 +44,7 @@ func canonicalNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) 
 					cur_val = M[i][j]
 					cur_i = i
 					cur_j = j
+
 				}
 			}
 		}
@@ -57,7 +58,19 @@ type Tuple struct {
 	index_j int
 }
 
-func rapidNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int, int) {
+func MaxIntSlice(v []float64) (m float64) {
+	m = -math.MaxFloat64
+
+	for i := 0; i < len(v); i++ {
+		if v[i] > m {
+			m = v[i]
+		}
+	}
+	return m
+}
+
+func rapidNeighborJoining(u []float64, D [][]float64, n int) (int, int) {
+	fmt.Println("swampgod")
 	S := make([][]Tuple, n)
 	for i := range S {
 		S[i] = make([]Tuple, n)
@@ -80,24 +93,33 @@ func rapidNeighborJoining(M [][]float64, r []float64, D [][]float64, n int) (int
 
 		fmt.Println(S[i])
 		fmt.Println("sawwaw")
-
 	}
-	//
-	//
-	//
-	// Some code to find desired pair to join
-	//
-	//
-	//
 
-	return 1, 1 // haha test
+	max_u := MaxIntSlice(u)
+	q_min := math.MaxFloat64
+	cur_i, cur_j := -1, -1
 
+	for r := 0; r < n; r++ {
+		for c := 1; c < n; c++ {
+			s := S[r][c]
+			if s.value-u[r]-max_u > q_min {
+				break
+			}
+			if s.value-u[r]-u[c] < q_min {
+				cur_i = r
+				cur_j = s.index_j
+				q_min = s.value - u[r] - u[c]
+			}
+		}
+	}
+
+	return cur_i, cur_j
 }
 
 func neighborJoin(M [][]float64, D [][]float64, labels []string) {
 	n := len(D)
 
-	r := make([]float64, n)
+	u := make([]float64, n)
 
 	print("D\n")
 	for i := 0; i < n; i++ {
@@ -109,15 +131,15 @@ func neighborJoin(M [][]float64, D [][]float64, labels []string) {
 		for j := range row {
 			sum = sum + D[i][j]
 		}
-		r[i] = sum / float64(n-2)
+		u[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := rapidNeighborJoining(M, r, D, n)
+	cur_i, cur_j := rapidNeighborJoining(u, D, n)
 
 	if NewickFlag {
 		//Distance to new point where they meet
-		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(r[cur_i]-r[cur_j])/2)
-		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(r[cur_j]-r[cur_i])/2)
+		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
+		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
 		//convert to string
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)

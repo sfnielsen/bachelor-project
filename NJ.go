@@ -32,7 +32,8 @@ func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) 
 				Q[i][j] = 0
 			} else {
 				Q[i][j] = D[i][j] - r[i] - r[j]
-
+				
+				
 				if Q[i][j] < cur_val {
 					cur_val = Q[i][j]
 					cur_i = i
@@ -50,7 +51,7 @@ type Tuple struct {
 	index_j int
 }
 
-func rapidNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) {
+func rapidNeighborJoining(Q [][]float64, u []float64, D [][]float64, n int) {
 	S := Q
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
@@ -70,7 +71,7 @@ func neighborJoin(D [][]float64, labels []string) {
 	for i := range Q {
 		Q[i] = make([]float64, n)
 	}
-	r := make([]float64, n)
+	u := make([]float64, n)
 
 	print("D\n")
 	for i := 0; i < n; i++ {
@@ -82,15 +83,15 @@ func neighborJoin(D [][]float64, labels []string) {
 		for j := range row {
 			sum = sum + D[i][j]
 		}
-		r[i] = sum / float64(n-2)
+		u[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := canonicalNeighborJoining(Q, r, D, n)
+	cur_i, cur_j := canonicalNeighborJoining(Q, u, D, n)
 
 	if NewickFlag {
 		//Distance to new point where they meet
-		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(r[cur_i]-r[cur_j])/2)
-		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(r[cur_j]-r[cur_i])/2)
+		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
+		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
 		//convert to string
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)
