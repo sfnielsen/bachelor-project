@@ -41,7 +41,10 @@ func main() {
 		})
 		fmt.Println(S[i])
 	}
-	dead_records := make(map[int]bool)
+	dead_records := make(map[int]int)
+	for i := range D {
+		dead_records[i] = i
+	}
 
 	neighborJoin(D, S, labels, dead_records)
 }
@@ -62,24 +65,37 @@ func MaxIntSlice(v []float64) (m float64) {
 	return m
 }
 
-func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple) (int, int) {
-	n := len(D)
+func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int) (int, int) {
+
 	fmt.Println("swampgod")
 
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
-	for r := 0; r < n; r++ {
-		for c := 1; c < n; c++ {
+	for r, row := range S {
+		if r == 0 {
+			continue
+		}
+		for c := range row {
 			s := S[r][c]
+			c_to_cD := dead_records[s.index_j]
+			fmt.Println(c, c_to_cD)
+			//check if dead record
+			if c_to_cD == -1 {
+				continue
+			}
+			// case where i == j
+			if r == c_to_cD {
+				continue
+			}
 			if s.value-u[r]-max_u > q_min {
 				break
 			}
-			if s.value-u[r]-u[c] < q_min {
+			if s.value-u[r]-u[c_to_cD] < q_min {
 				cur_i = r
-				cur_j = s.index_j
-				q_min = s.value - u[r] - u[c]
+				cur_j = dead_records[s.index_j]
+				q_min = s.value - u[r] - u[c_to_cD]
 			}
 		}
 	}
@@ -87,7 +103,9 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple) (int, int) {
 	return cur_i, cur_j
 }
 
-func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]bool) {
+func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int) {
+
+	fmt.Println(dead_records)
 	n := len(D)
 
 	u := make([]float64, n)
@@ -106,7 +124,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		u[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := rapidNeighborJoining(u, D, S)
+	cur_i, cur_j := rapidNeighborJoining(u, D, S, dead_records)
 
 	if NewickFlag {
 		//Distance to new point where they meet
@@ -147,7 +165,14 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 }
 
-func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]bool) {
+func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
+	//make sure p_i is the smallest index
+	if p_i > p_j {
+		temp := p_i
+		p_i = p_j
+		p_j = temp
+	}
+
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
@@ -189,7 +214,7 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float
 
 	}
 	//cut excess data away
-	S_new[p_i] = S_new[p_i][:len(D)-1]
+	S_new[p_i] = S_new[p_i][:len(D)]
 
 	//sort merged row
 	sort.Slice(S_new[p_i], func(a, b int) bool {
@@ -201,7 +226,17 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float
 		fmt.Println(S_new[i])
 	}
 	S_new = append(S[:p_j], S[p_j+1:]...)
-	dead_records[p_j] = true
+
+	//assign dead records -> -1
+	dead_records[p_i] = -1
+	dead_records[p_j] = -1
+	//add merged ij at i's spot
+	for k, v := range dead_records {
+		if k > p_j {
+			dead_records[k] = v - 1
+		}
+	}
+	dead_records[len(dead_records)] = p_i
 
 	return D_new, S_new, dead_records
 }
