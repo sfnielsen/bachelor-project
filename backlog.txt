@@ -1,2 +1,3 @@
 Husk at tage højde for i == j casen når vi skal til at lave lookups, da den altid er mindst
 
+Måske lave globale variabler så vi ikke passer ting rundt så voldsomt

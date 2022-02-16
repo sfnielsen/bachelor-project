@@ -41,8 +41,9 @@ func main() {
 		})
 		fmt.Println(S[i])
 	}
+	dead_records := make(map[int]bool)
 
-	neighborJoin(D, S, labels)
+	neighborJoin(D, S, labels, dead_records)
 }
 
 type Tuple struct {
@@ -61,7 +62,7 @@ func MaxIntSlice(v []float64) (m float64) {
 	return m
 }
 
-func rapidNeighborJoining(u []float64,  D [][]float64, S [][]Tuple,) (int, int) {
+func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple) (int, int) {
 	n := len(D)
 	fmt.Println("swampgod")
 
@@ -86,7 +87,7 @@ func rapidNeighborJoining(u []float64,  D [][]float64, S [][]Tuple,) (int, int) 
 	return cur_i, cur_j
 }
 
-func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
+func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]bool) {
 	n := len(D)
 
 	u := make([]float64, n)
@@ -95,6 +96,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
 	for i := 0; i < n; i++ {
 		fmt.Println(D[i])
 	}
+
 	print("\n")
 	for i, row := range D {
 		sum := 0.0
@@ -104,7 +106,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
 		u[i] = sum / float64(n-2)
 	}
 
-	cur_i, cur_j := rapidNeighborJoining(u, D , S)
+	cur_i, cur_j := rapidNeighborJoining(u, D, S)
 
 	if NewickFlag {
 		//Distance to new point where they meet
@@ -119,8 +121,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 	}
 
-	D_new := createNewDistanceMatrix(D, cur_i, cur_j)
-
+	D_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
 
 	for i := 0; i < len(labels); i++ {
 		fmt.Println(labels[i])
@@ -128,7 +129,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, S_new [][]Tuple, labels)
+		neighborJoin(D_new, S, labels, dead_records_new)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[cur_i] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + "," + labels[cur_j] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + ");"
@@ -145,7 +146,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string) {
 
 }
 
-func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64 {
+func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float64, p_i int, p_j int) ([][]float64, map[int]bool) {
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
@@ -159,21 +160,37 @@ func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64 {
 			D[p_i][k] = temp
 			D[k][p_i] = temp
 
-
-
 		}
 	}
 
-	//delete row
+	//delete row in both D and S
 	D_new := append(D[:p_j], D[p_j+1:]...)
 
-
-
-	//delete column
+	//delete column in D
 	for i := 0; i < len(D_new); i++ {
 		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
 
 	}
 
-	return D_new
+	//fix S
+	S_new := append(S[:p_j], S[p_j+1:]...)
+
+	dead_records[p_j] = true
+	row_to_be_inserted := D[p_i]
+
+	list_to_be_inserted := make([]Tuple, len(row_to_be_inserted))
+	for j := 0; j < len(D); j++ {
+		var tuple Tuple
+		tuple.value = D[p_i][j]
+		tuple.index_j = j
+
+		S_new[p_i][j] = tuple
+
+	}
+	fmt.Println("asdhf")
+	for i := 0; i < len(S_new); i++ {
+		fmt.Println(S_new[i])
+	}
+
+	return D_new, dead_records
 }
