@@ -1,10 +1,10 @@
 FIXED: 
     Husk at tage højde for i == j casen når vi skal til at lave lookups, da den altid er mindst
-
+    Test class
 
 
 TODO:
     Måske lave globale variabler så vi ikke passer ting rundt så voldsomt
     Snak med mr. birkefar om 2*n obsolete records tingen?  ?? ? 
     Refactoring
-    Test class 
+    program til at verificere newick løsninger sammenlignet med D matricen
