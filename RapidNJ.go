@@ -19,9 +19,26 @@ func main() {
 		{21, 12, 0, 14},
 		{27, 18, 14, 0},
 	}
-	n := len(D)
 
-	//create initial S matrix
+	S := initSmatrix(D)
+	dead_records := initDeadRecords(D)
+
+	newick_result := neighborJoin(D, S, labels, dead_records)
+	fmt.Println(newick_result)
+}
+
+//function to initialize dead records
+func initDeadRecords(D [][]float64) map[int]int {
+	dead_records := make(map[int]int)
+	for i := range D {
+		dead_records[i] = i
+	}
+	return dead_records
+}
+
+//function to initialize S matrix
+func initSmatrix(D [][]float64) [][]Tuple {
+	n := len(D)
 	S := make([][]Tuple, n)
 	for i := range S {
 		S[i] = make([]Tuple, n)
@@ -41,12 +58,7 @@ func main() {
 		})
 		fmt.Println(S[i])
 	}
-	dead_records := make(map[int]int)
-	for i := range D {
-		dead_records[i] = i
-	}
-
-	neighborJoin(D, S, labels, dead_records)
+	return S
 }
 
 type Tuple struct {
@@ -103,7 +115,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	return cur_i, cur_j
 }
 
-func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int) {
+func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int) string {
 
 	fmt.Println(dead_records)
 	n := len(D)
@@ -147,7 +159,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, S_new, labels, dead_records_new)
+		return neighborJoin(D_new, S_new, labels, dead_records_new)
 	} else {
 		if NewickFlag {
 			fmt.Println(cur_i, cur_j)
@@ -158,11 +170,11 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 			if err != nil {
 				panic(err)
 			}
+			return newick
 
 		}
-		return
 	}
-
+	return "error" //this case should not be possible
 }
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
