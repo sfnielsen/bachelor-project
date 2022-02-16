@@ -121,7 +121,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 	}
 
-	D_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
+	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
 
 	for i := 0; i < len(labels); i++ {
 		fmt.Println(labels[i])
@@ -129,10 +129,11 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, S, labels, dead_records_new)
+		neighborJoin(D_new, S_new, labels, dead_records_new)
 	} else {
 		if NewickFlag {
-			newick := "(" + labels[cur_i] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + "," + labels[cur_j] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + ");"
+			fmt.Println(cur_i, cur_j)
+			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
 			fmt.Println(newick)
 
 			err := ioutil.WriteFile("newick.txt", []byte(newick), 0644)
@@ -146,8 +147,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 }
 
-func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float64, p_i int, p_j int) ([][]float64, map[int]bool) {
-
+func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]bool) {
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
@@ -173,24 +173,35 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]bool, D [][]float
 	}
 
 	//fix S
-	S_new := append(S[:p_j], S[p_j+1:]...)
+	S_new := S
 
-	dead_records[p_j] = true
-	row_to_be_inserted := D[p_i]
-
-	list_to_be_inserted := make([]Tuple, len(row_to_be_inserted))
-	for j := 0; j < len(D); j++ {
+	//overwrite the row p_i where we want to store merged ij
+	fmt.Println(p_i, p_j, len(D[p_i]))
+	fmt.Println("HAHA")
+	for i := 0; i < len(S_new); i++ {
+		fmt.Println(S_new[i])
+	}
+	for j := 0; j < len(D[p_i]); j++ {
 		var tuple Tuple
 		tuple.value = D[p_i][j]
 		tuple.index_j = j
-
 		S_new[p_i][j] = tuple
 
 	}
+	//cut excess data away
+	S_new[p_i] = S_new[p_i][:len(D)-1]
+
+	//sort merged row
+	sort.Slice(S_new[p_i], func(a, b int) bool {
+		return (S_new[p_i][a].value < S_new[p_i][b].value)
+	})
+
 	fmt.Println("asdhf")
 	for i := 0; i < len(S_new); i++ {
 		fmt.Println(S_new[i])
 	}
+	S_new = append(S[:p_j], S[p_j+1:]...)
+	dead_records[p_j] = true
 
-	return D_new, dead_records
+	return D_new, S_new, dead_records
 }

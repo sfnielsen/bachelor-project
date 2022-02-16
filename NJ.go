@@ -111,7 +111,8 @@ func neighborJoin(D [][]float64, labels []string) {
 		neighborJoin(D_new, labels)
 	} else {
 		if NewickFlag {
-			newick := "(" + labels[cur_i] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + "," + labels[cur_j] + ":" + fmt.Sprintf("%f", D_new[cur_i][cur_j]/2) + ");"
+			fmt.Println(cur_i, cur_j)
+			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
 			fmt.Println(newick)
 
 			err := ioutil.WriteFile("newick.txt", []byte(newick), 0644)
