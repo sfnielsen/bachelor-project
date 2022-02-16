@@ -32,8 +32,7 @@ func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) 
 				Q[i][j] = 0
 			} else {
 				Q[i][j] = D[i][j] - r[i] - r[j]
-				
-				
+
 				if Q[i][j] < cur_val {
 					cur_val = Q[i][j]
 					cur_i = i
@@ -130,7 +129,7 @@ func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64 {
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
-			D[p_i][k] = 0
+			continue
 		}
 		if p_j == k {
 			continue
