@@ -31,12 +31,12 @@ func generateTree(size int) {
 		}
 		fmt.Println("saka")
 
-		random_x := rand.Intn(len(array) - 1)
+		random_x := rand.Intn(len(array))
 		random_y := random_x
 
 		//while loop that ensures we find two unique random integers
 		for random_x == random_y {
-			random_y = rand.Intn(len(array) - 1)
+			random_y = rand.Intn(len(array)) - 1
 		}
 		fmt.Println("swamp")
 		fmt.Println("length of array:", len(array))
