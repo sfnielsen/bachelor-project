@@ -46,3 +46,7 @@ func Test4Taxa_made_up_numbers(t *testing.T) {
 	}
 
 }
+
+func TestMakeTree(t *testing.T) {
+	generateTree()
+}
