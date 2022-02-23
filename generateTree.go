@@ -33,16 +33,15 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 	for i := range distanceMatrix {
 		distanceMatrix[i] = make([]float64, size)
 	}
-	//initialize labels
-	labels := make([]string, size)
 
 	//append all staring nodes to tree and create labels
+	labels := make([]string, size)
+
 	for _, value := range array {
 		labels = append(labels, value.name)
 		tree = append(tree, value)
 	}
-	distanceMatrix = createDistanceMatrix(distanceMatrix, labels, tree)
-
+	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
 	fmt.Println("GOODDAY")
 	for len(array) > 1 {
 
@@ -140,12 +139,39 @@ func (a Tree) Len() int           { return len(a) }
 func (a Tree) Less(i, j int) bool { return a[i].name < a[j].name }
 func (a Tree) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
-func createDistanceMatrix(distanceMatrix [][]float64, labels []string, tree Tree) [][]float64 {
+func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string]bool, labelMap map[string]int) []float64 {
+	if _, ok := seen[node.name]; ok {
+		return distanceRow
+	}
+	if len(node.edge_array) == 1 {
+		seen[node.name] = true
+		distanceRow[labelMap[node.name]] = sum
+		return distanceRow
+	}
+	for _, edge := range node.edge_array {
+		sum1 := sum
+		sum1 += float64(edge.distance)
+		distanceRow = traverseTree(distanceRow, *edge.node, sum1, seen, labelMap)
+	}
+	return distanceRow
+}
+
+func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string) [][]float64 {
+	labelMap := make(map[string]int)
+	for i, v := range labels {
+		labelMap[v] = i
+	}
+
 	for _, node := range tree {
-		if node.edge_array == 1 {
+		seen := make(map[string]bool)
+		if len(node.edge_array) == 1 {
+			labels = append(labels, node.name)
 
-			//node.name
-
+			distanceRow := make([]float64, len(labels))
+			distanceMatrix[labelMap[node.name]] = traverseTree(distanceRow, *node.edge_array[0].node,
+				float64(node.edge_array[0].distance), seen, labelMap)
+				
+			fmt.Println(distanceMatrix[labelMap[node.name]])
 		}
 	}
 	return distanceMatrix
