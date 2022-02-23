@@ -39,7 +39,7 @@ def neighbour_join(D,labels):
         neighbour_join(D_new,new_labels)
     else:
         #creating newick form
-        newick = "(" + new_labels[p_i] + ":" + str(D_new[p_i,p_j] / 2 ) +  "," + new_labels[p_j] + ":" + str(D_new[p_i,p_j] / 2 )+ ");"
+        newick = "(" + new_labels[0] + ":" + str(D_new[0,1] / 2 ) +  "," + new_labels[1] + ":" + str(D_new[0,1] / 2 )+ ");"
         print(newick)
         input = StringIO(newick)
         tree = Phylo.read(input, "newick")
@@ -70,7 +70,7 @@ def compute_new_dist_mat(D,p_i ,p_j, labels):
     return D, labels
 
 if __name__ == "__main__":
-    """
+
     D = np.array(
         [
             [  0,  5,  68,  57, 127,  27,  28,  33],
@@ -85,12 +85,13 @@ if __name__ == "__main__":
         )
     
     labels = np.array(["A","B","C","D", "E", "F", "G", "H"], type(str))
+
     """
     D = np.array([[0,17,21,27],
                   [17,0,12,18],
                   [21,12,0,14],
                   [27,18,14,0]])
     labels = np.array(["A","B","C","D"], type(str))
-        
+    """
 
     main(D,labels)

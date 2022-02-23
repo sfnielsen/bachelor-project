@@ -244,8 +244,12 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	dead_records[p_j] = -1
 	//add merged ij at i's spot
 	for k, v := range dead_records {
+		//if affected by index movement
 		if k > p_j {
-			dead_records[k] = v - 1
+			//if record already dead we keep -1 as the 'nil' value
+			if dead_records[k] != -1 {
+				dead_records[k] = v - 1
+			}
 		}
 	}
 	dead_records[len(dead_records)] = p_i

@@ -8,3 +8,4 @@ TODO:
     Snak med mr. birkefar om 2*n obsolete records tingen?  ?? ? 
     Refactoring
     program til at verificere newick løsninger sammenlignet med D matricen
+    unit-testing
