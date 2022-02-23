@@ -9,3 +9,4 @@ TODO:
     Refactoring
     program til at verificere newick løsninger sammenlignet med D matricen
     unit-testing
+    The last nodes we connect ends up with a '2 edge node' which should be a '3 edge node'

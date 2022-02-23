@@ -154,9 +154,9 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 	}
 
 	for _, edge := range node.Edge_array {
-		sum1 := sum
-		sum1 += float64(edge.Distance)
-		distanceRow = traverseTree(distanceRow, *edge.Node, sum1, seen, labelMap)
+		new_sum := sum
+		new_sum += float64(edge.Distance)
+		distanceRow = traverseTree(distanceRow, *edge.Node, new_sum, seen, labelMap)
 	}
 	return distanceRow
 }
@@ -167,20 +167,19 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	for i, v := range labels {
 		labelMap[v] = i
 	}
-	fmt.Println(len(labelMap))
 
 	for _, node := range tree {
 		fmt.Println("investigating the future")
 		fmt.Println(len(node.Edge_array))
 		if len(node.Edge_array) == 1 {
+			//initialize seen map (set) and adding the current node
 			seen := make(map[string]bool)
-			fmt.Println("the length is the one")
+			seen[node.Name] = true
 
 			distanceRow := make([]float64, len(labels))
-			fmt.Println(len(distanceRow))
-			fmt.Println(len(distanceMatrix))
 
 			//this assumes that index 0 in array holds the lexicographicly first node. Perhaps sorting should be implemented to ensure this property
+			//we start from the only node that our current label connects to.
 			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
 				float64(node.Edge_array[0].Distance), seen, labelMap)
 
