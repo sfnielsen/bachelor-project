@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 type Edge struct {
@@ -37,7 +35,7 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 	}
 
 	//append all staring nodes to tree and create labels
-	labels := make([]string, size)
+	labels := make([]string, 0)
 
 	for _, value := range array {
 		labels = append(labels, value.Name)
@@ -106,7 +104,6 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 		fmt.Println("swpm")
 
 		fmt.Println(len(element_x.Edge_array))
-		fmt.Println(cmp.Equal(element_x, *tree[random_x]))
 
 		//append edge to new node to joined neighbours' edge-arrays
 		element_x.Edge_array = append(element_x.Edge_array, edge_to_new_node_from_a)
@@ -149,11 +146,13 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 	if _, ok := seen[node.Name]; ok {
 		return distanceRow
 	}
+	//set THIS node to seen
+	seen[node.Name] = true
 	if len(node.Edge_array) == 1 {
-		seen[node.Name] = true
 		distanceRow[labelMap[node.Name]] = sum
 		return distanceRow
 	}
+
 	for _, edge := range node.Edge_array {
 		sum1 := sum
 		sum1 += float64(edge.Distance)
@@ -171,14 +170,17 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	fmt.Println(len(labelMap))
 
 	for _, node := range tree {
-		seen := make(map[string]bool)
 		fmt.Println("investigating the future")
 		fmt.Println(len(node.Edge_array))
 		if len(node.Edge_array) == 1 {
+			seen := make(map[string]bool)
 			fmt.Println("the length is the one")
-			labels = append(labels, node.Name)
 
 			distanceRow := make([]float64, len(labels))
+			fmt.Println(len(distanceRow))
+			fmt.Println(len(distanceMatrix))
+
+			//this assumes that index 0 in array holds the lexicographicly first node. Perhaps sorting should be implemented to ensure this property
 			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
 				float64(node.Edge_array[0].Distance), seen, labelMap)
 
