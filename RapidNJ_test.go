@@ -49,8 +49,8 @@ func Test4Taxa_made_up_numbers(t *testing.T) {
 
 func TestMakeTree(t *testing.T) {
 	generateTree(10)
-	if 1 == 3 {
-		t.Errorf("poop")
+	if 1 == 2 {
+		t.Errorf("poops")
 	}
 }
 

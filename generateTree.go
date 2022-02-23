@@ -18,7 +18,7 @@ type Node struct {
 	edge_array []*Edge
 }
 
-type Tree []Node
+type Tree []*Node
 
 func remove(slice []Node, s int) []Node {
 	return append(slice[:s], slice[s+1:]...)
@@ -39,17 +39,15 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 
 	for _, value := range array {
 		labels = append(labels, value.name)
-		tree = append(tree, value)
+		tree = append(tree, &value)
 	}
-	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
-	fmt.Println("GOODDAY")
+
 	for len(array) > 1 {
 
 		fmt.Println("yo")
 		for i := 0; i < len(array); i++ {
 			fmt.Println(array[i].name)
 		}
-		fmt.Println("saka")
 
 		rand.Seed(time.Now().UnixNano())
 
@@ -103,18 +101,23 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 		edge_to_new_node_from_b := new(Edge)
 		edge_to_new_node_from_b.distance = new_edge_a.distance
 		edge_to_new_node_from_b.node = new_node
+		fmt.Println("swpm")
+
+		fmt.Println(len(element_x.edge_array))
 
 		//append edge to new node to joined neighbours' edge-arrays
 		element_x.edge_array = append(element_x.edge_array, edge_to_new_node_from_a)
 		element_y.edge_array = append(element_y.edge_array, edge_to_new_node_from_b)
 
+		fmt.Println(len(element_x.edge_array))
 		array = append(array, *new_node)
 
-		tree = append(tree, *new_node)
+		tree = append(tree, new_node)
 
 	}
 	fmt.Println(array[0].name)
 
+	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
 	return tree, labels, distanceMatrix
 }
 
@@ -157,20 +160,25 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 }
 
 func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string) [][]float64 {
+	print("creating the distance")
 	labelMap := make(map[string]int)
 	for i, v := range labels {
 		labelMap[v] = i
 	}
+	fmt.Println(len(labelMap))
 
 	for _, node := range tree {
 		seen := make(map[string]bool)
+		fmt.Println("investigating the future")
+		fmt.Println(len(node.edge_array))
 		if len(node.edge_array) == 1 {
+			fmt.Println("the length is the one")
 			labels = append(labels, node.name)
 
 			distanceRow := make([]float64, len(labels))
 			distanceMatrix[labelMap[node.name]] = traverseTree(distanceRow, *node.edge_array[0].node,
 				float64(node.edge_array[0].distance), seen, labelMap)
-				
+
 			fmt.Println(distanceMatrix[labelMap[node.name]])
 		}
 	}
