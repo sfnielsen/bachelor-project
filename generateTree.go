@@ -5,22 +5,24 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type Edge struct {
-	node     *Node
-	distance int
+	Node     *Node
+	Distance int
 }
 
 type Node struct {
-	name string
+	Name string
 	//if len(edge_array) == 1, the Node should be a 'leaf'
-	edge_array []*Edge
+	Edge_array []*Edge
 }
 
 type Tree []*Node
 
-func remove(slice []Node, s int) []Node {
+func remove(slice []*Node, s int) []*Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
@@ -38,15 +40,15 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 	labels := make([]string, size)
 
 	for _, value := range array {
-		labels = append(labels, value.name)
-		tree = append(tree, &value)
+		labels = append(labels, value.Name)
+		tree = append(tree, value)
 	}
 
 	for len(array) > 1 {
 
 		fmt.Println("yo")
 		for i := 0; i < len(array); i++ {
-			fmt.Println(array[i].name)
+			fmt.Println(array[i].Name)
 		}
 
 		rand.Seed(time.Now().UnixNano())
@@ -78,60 +80,61 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 
 		//initialize new node and set its name as appended string combination
 		new_node := new(Node)
-		new_node.name = "(" + element_x.name + "," + element_y.name + ")"
+		new_node.Name = "(" + element_x.Name + "," + element_y.Name + ")"
 
 		//make pointers to joined nodes
 		new_edge_a := new(Edge)
-		new_edge_a.distance = rand.Intn(20)
-		new_edge_a.node = &element_x
+		new_edge_a.Distance = rand.Intn(20)
+		new_edge_a.Node = element_x
 
 		new_edge_b := new(Edge)
-		new_edge_b.distance = rand.Intn(20)
-		new_edge_b.node = &element_y
+		new_edge_b.Distance = rand.Intn(20)
+		new_edge_b.Node = element_y
 
 		//append to edges to new node's array
-		new_node.edge_array = append(new_node.edge_array, new_edge_a)
-		new_node.edge_array = append(new_node.edge_array, new_edge_b)
+		new_node.Edge_array = append(new_node.Edge_array, new_edge_a)
+		new_node.Edge_array = append(new_node.Edge_array, new_edge_b)
 
 		//make pointers to new node
 		edge_to_new_node_from_a := new(Edge)
-		edge_to_new_node_from_a.distance = new_edge_a.distance
-		edge_to_new_node_from_a.node = new_node
+		edge_to_new_node_from_a.Distance = new_edge_a.Distance
+		edge_to_new_node_from_a.Node = new_node
 
 		edge_to_new_node_from_b := new(Edge)
-		edge_to_new_node_from_b.distance = new_edge_a.distance
-		edge_to_new_node_from_b.node = new_node
+		edge_to_new_node_from_b.Distance = new_edge_a.Distance
+		edge_to_new_node_from_b.Node = new_node
 		fmt.Println("swpm")
 
-		fmt.Println(len(element_x.edge_array))
+		fmt.Println(len(element_x.Edge_array))
+		fmt.Println(cmp.Equal(element_x, *tree[random_x]))
 
 		//append edge to new node to joined neighbours' edge-arrays
-		element_x.edge_array = append(element_x.edge_array, edge_to_new_node_from_a)
-		element_y.edge_array = append(element_y.edge_array, edge_to_new_node_from_b)
+		element_x.Edge_array = append(element_x.Edge_array, edge_to_new_node_from_a)
+		element_y.Edge_array = append(element_y.Edge_array, edge_to_new_node_from_b)
 
-		fmt.Println(len(element_x.edge_array))
-		array = append(array, *new_node)
+		fmt.Println(len(element_x.Edge_array))
+		array = append(array, new_node)
 
 		tree = append(tree, new_node)
 
 	}
-	fmt.Println(array[0].name)
+	fmt.Println(array[0].Name)
 
 	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
 	return tree, labels, distanceMatrix
 }
 
-func generateArray(numberOfLeafs int) []Node {
+func generateArray(numberOfLeafs int) []*Node {
 
-	returnArray := make([]Node, numberOfLeafs)
+	returnArray := make([]*Node, numberOfLeafs)
 	fmt.Println("bevore lop")
 	for i := 0; i < numberOfLeafs; i++ {
 		fmt.Println("kek")
 		node := new(Node)
-		node.name = strconv.Itoa(i)
-		fmt.Println(node.name)
+		node.Name = strconv.Itoa(i)
+		fmt.Println(node.Name)
 		fmt.Println(returnArray)
-		returnArray[i] = *node
+		returnArray[i] = node
 		fmt.Println(returnArray)
 	}
 	return returnArray
@@ -139,22 +142,22 @@ func generateArray(numberOfLeafs int) []Node {
 
 //implement the sort.Interface interface for the Tree datatype
 func (a Tree) Len() int           { return len(a) }
-func (a Tree) Less(i, j int) bool { return a[i].name < a[j].name }
+func (a Tree) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func (a Tree) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string]bool, labelMap map[string]int) []float64 {
-	if _, ok := seen[node.name]; ok {
+	if _, ok := seen[node.Name]; ok {
 		return distanceRow
 	}
-	if len(node.edge_array) == 1 {
-		seen[node.name] = true
-		distanceRow[labelMap[node.name]] = sum
+	if len(node.Edge_array) == 1 {
+		seen[node.Name] = true
+		distanceRow[labelMap[node.Name]] = sum
 		return distanceRow
 	}
-	for _, edge := range node.edge_array {
+	for _, edge := range node.Edge_array {
 		sum1 := sum
-		sum1 += float64(edge.distance)
-		distanceRow = traverseTree(distanceRow, *edge.node, sum1, seen, labelMap)
+		sum1 += float64(edge.Distance)
+		distanceRow = traverseTree(distanceRow, *edge.Node, sum1, seen, labelMap)
 	}
 	return distanceRow
 }
@@ -170,16 +173,16 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	for _, node := range tree {
 		seen := make(map[string]bool)
 		fmt.Println("investigating the future")
-		fmt.Println(len(node.edge_array))
-		if len(node.edge_array) == 1 {
+		fmt.Println(len(node.Edge_array))
+		if len(node.Edge_array) == 1 {
 			fmt.Println("the length is the one")
-			labels = append(labels, node.name)
+			labels = append(labels, node.Name)
 
 			distanceRow := make([]float64, len(labels))
-			distanceMatrix[labelMap[node.name]] = traverseTree(distanceRow, *node.edge_array[0].node,
-				float64(node.edge_array[0].distance), seen, labelMap)
+			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
+				float64(node.Edge_array[0].Distance), seen, labelMap)
 
-			fmt.Println(distanceMatrix[labelMap[node.name]])
+			fmt.Println(distanceMatrix[labelMap[node.Name]])
 		}
 	}
 	return distanceMatrix

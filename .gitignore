@@ -2,5 +2,6 @@
 *.test
 *.prof
 
-
+#some go related files
 *.mod
+*.sum
