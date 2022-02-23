@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 type Edge struct {
@@ -30,6 +31,8 @@ func generateTree(size int) {
 			fmt.Println(array[i].name)
 		}
 		fmt.Println("saka")
+
+		rand.Seed(time.Now().UnixNano())
 
 		random_x := rand.Intn(len(array))
 		random_y := random_x
