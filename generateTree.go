@@ -39,7 +39,7 @@ func generateTree(size int) {
 
 		//while loop that ensures we find two unique random integers
 		for random_x == random_y {
-			random_y = rand.Intn(len(array)) - 1
+			random_y = rand.Intn(len(array))
 		}
 		fmt.Println("swamp")
 		fmt.Println("length of array:", len(array))
