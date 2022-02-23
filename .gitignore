@@ -1,3 +1,6 @@
 #filetypes for profiling#
 *.test
 *.prof
+
+
+*.mod

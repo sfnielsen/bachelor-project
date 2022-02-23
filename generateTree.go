@@ -20,10 +20,17 @@ func remove(slice []Node, s int) []Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func generateTree() {
-	array := generateArray(100)
+func generateTree(size int) {
+	array := generateArray(size)
 	fmt.Println("GOODDAY")
-	for len(array) > 3 {
+	for len(array) > 1 {
+
+		fmt.Println("yo")
+		for i := 0; i < len(array); i++ {
+			fmt.Println(array[i].name)
+		}
+		fmt.Println("saka")
+
 		random_x := rand.Intn(len(array) - 1)
 		random_y := random_x
 
@@ -31,16 +38,27 @@ func generateTree() {
 		for random_x == random_y {
 			random_y = rand.Intn(len(array) - 1)
 		}
+		fmt.Println("swamp")
+		fmt.Println("length of array:", len(array))
+		fmt.Println("drawn")
+		fmt.Println(random_x)
+		fmt.Println(random_y)
+		fmt.Println("oky")
 
 		element_x := array[random_x]
 		element_y := array[random_y]
 
-		array = remove(array, random_x)
-		array = remove(array, random_y)
+		if random_x < random_y {
+			array = remove(array, random_y)
+			array = remove(array, random_x)
+		} else {
+			array = remove(array, random_x)
+			array = remove(array, random_y)
+		}
 
 		//initialize new node and set its name as appended string combination
 		new_node := new(Node)
-		new_node.name = element_x.name + ":" + element_y.name
+		new_node.name = "(" + element_x.name + "," + element_y.name + ")"
 
 		//make pointers to joined nodes
 		new_edge_a := new(Edge)
@@ -69,20 +87,37 @@ func generateTree() {
 		element_y.edge_array = append(element_y.edge_array, edge_to_new_node_from_b)
 
 		array = append(array, *new_node)
-		fmt.Println("ugabuga")
-		for i := 0; i > len(array)-1; i++ {
-			print(array[i].name)
-		}
 	}
+	fmt.Println(array[0].name)
 }
 
 func generateArray(numberOfLeafs int) []Node {
 
 	returnArray := make([]Node, numberOfLeafs)
-	for i := 0; i > numberOfLeafs; i++ {
-		leaf := new(Node)
-		leaf.name = strconv.Itoa(i)
-		returnArray = append(returnArray, *leaf)
+	fmt.Println("bevore lop")
+	for i := 0; i < numberOfLeafs; i++ {
+		fmt.Println("kek")
+		node := new(Node)
+		node.name = strconv.Itoa(i)
+		fmt.Println(node.name)
+		fmt.Println(returnArray)
+		returnArray[i] = *node
+		fmt.Println(returnArray)
 	}
 	return returnArray
+}
+
+type Tree []Node
+
+//implement the sort.Interface interface
+func (a Tree) Len() int           { return len(a) }
+func (a Tree) Less(i, j int) bool { return a[i].name < a[j].name }
+func (a Tree) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func sortTree() {
+
+}
+
+func compare_trees(tree1 Tree, tree2 Tree) bool {
+	return true
 }
