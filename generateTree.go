@@ -13,16 +13,36 @@ type Edge struct {
 }
 
 type Node struct {
-	name       string
+	name string
+	//if len(edge_array) == 1, the Node should be a 'leaf'
 	edge_array []*Edge
 }
+
+type Tree []Node
 
 func remove(slice []Node, s int) []Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func generateTree(size int) {
+func generateTree(size int) (Tree, []string, [][]float64) {
 	array := generateArray(size)
+	tree := make(Tree, 0)
+
+	//initialize distance matrix
+	distanceMatrix := make([][]float64, size)
+	for i := range distanceMatrix {
+		distanceMatrix[i] = make([]float64, size)
+	}
+	//initialize labels
+	labels := make([]string, size)
+
+	//append all staring nodes to tree and create labels
+	for _, value := range array {
+		labels = append(labels, value.name)
+		tree = append(tree, value)
+	}
+	distanceMatrix = createDistanceMatrix(distanceMatrix, labels, tree)
+
 	fmt.Println("GOODDAY")
 	for len(array) > 1 {
 
@@ -90,8 +110,13 @@ func generateTree(size int) {
 		element_y.edge_array = append(element_y.edge_array, edge_to_new_node_from_b)
 
 		array = append(array, *new_node)
+
+		tree = append(tree, *new_node)
+
 	}
 	fmt.Println(array[0].name)
+
+	return tree, labels, distanceMatrix
 }
 
 func generateArray(numberOfLeafs int) []Node {
@@ -110,12 +135,21 @@ func generateArray(numberOfLeafs int) []Node {
 	return returnArray
 }
 
-type Tree []Node
-
-//implement the sort.Interface interface
+//implement the sort.Interface interface for the Tree datatype
 func (a Tree) Len() int           { return len(a) }
 func (a Tree) Less(i, j int) bool { return a[i].name < a[j].name }
 func (a Tree) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func createDistanceMatrix(distanceMatrix [][]float64, labels []string, tree Tree) [][]float64 {
+	for _, node := range tree {
+		if node.edge_array == 1 {
+
+			//node.name
+
+		}
+	}
+	return distanceMatrix
+}
 
 func sortTree() {
 
