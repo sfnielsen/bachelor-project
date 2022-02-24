@@ -114,7 +114,30 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 
 		tree = append(tree, new_node)
 
+		//joining the last 2 nodes
+		if len(array) == 2 {
+			//index 1 must be the one we just joined. We want to merge index 0 into this one aswell.
+
+			array[1].Name = "(" + array[0].Name + "," + array[1].Name[1:]
+			fmt.Println(len(array))
+
+			dist := rand.Intn(20)
+
+			new_edge_0 := new(Edge)
+			new_edge_0.Distance = dist
+			new_edge_0.Node = array[1]
+
+			new_edge_1 := new(Edge)
+			new_edge_1.Distance = dist
+			new_edge_1.Node = array[0]
+
+			array[0].Edge_array = append(array[0].Edge_array, new_edge_0)
+			array[1].Edge_array = append(array[1].Edge_array, new_edge_1)
+
+			array = remove(array, 0)
+		}
 	}
+
 	fmt.Println(array[0].Name)
 
 	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
