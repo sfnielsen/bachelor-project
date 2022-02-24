@@ -47,9 +47,22 @@ func Test4Taxa_made_up_numbers(t *testing.T) {
 
 }
 
+func Test_Generated_Tree_Transposed_is_same(t *testing.T) {
+	_, _, array := generateTree(100, 5)
+	t_array := transposeMatrix(array)
+
+	for i := range array {
+		for j := range array {
+			if array[i][j] != t_array[j][i] {
+				t.Errorf("not good")
+			}
+		}
+	}
+}
+
 func TestMakeTree(t *testing.T) {
-	generateTree(6, 2)
-	if 1 == 8 {
+	generateTree(5, 3)
+	if 1 == 2 {
 		t.Errorf("poops")
 	}
 }
@@ -74,4 +87,24 @@ func Test8Taxa_madeUpNumbers_shouldBeChangedLater(t *testing.T) {
 	if newick_result != "(B:5.765625,((((G:1.250000,H:11.750000):23.208333,A:0.791667):4.718750,F:29.781250):1.281250,((C:0.333333,E:68.666667):18.200000,D:11.800000):2.968750):5.765625);" {
 		t.Errorf("hehehe")
 	}
+}
+
+//#############################################
+//helper functions we use in the test framework
+//#############################################
+
+func transposeMatrix(matrix [][]float64) [][]float64 {
+	size := len(matrix)
+	transposed := make([][]float64, size)
+	for i := range transposed {
+		transposed[i] = make([]float64, size)
+	}
+
+	for i, rows := range matrix {
+		for j := range rows {
+			transposed[j][i] = matrix[i][j]
+		}
+
+	}
+	return transposed
 }

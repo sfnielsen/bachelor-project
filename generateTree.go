@@ -44,11 +44,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 	for len(array) > 1 {
 
-		fmt.Println("yo")
-		for i := 0; i < len(array); i++ {
-			fmt.Println(array[i].Name)
-		}
-
 		rand.Seed(time.Now().UnixNano())
 
 		random_x := rand.Intn(len(array))
@@ -99,30 +94,31 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 		edge_to_new_node_from_a.Node = new_node
 
 		edge_to_new_node_from_b := new(Edge)
-		edge_to_new_node_from_b.Distance = new_edge_a.Distance
+		edge_to_new_node_from_b.Distance = new_edge_b.Distance
 		edge_to_new_node_from_b.Node = new_node
-		fmt.Println("swpm")
-
-		fmt.Println(len(element_x.Edge_array))
 
 		//append edge to new node to joined neighbours' edge-arrays
 		element_x.Edge_array = append(element_x.Edge_array, edge_to_new_node_from_a)
 		element_y.Edge_array = append(element_y.Edge_array, edge_to_new_node_from_b)
 
-		fmt.Println(len(element_x.Edge_array))
 		array = append(array, new_node)
 
 		tree = append(tree, new_node)
 
+		for i := 0; i < len(array); i++ {
+			fmt.Println(array[i].Name)
+		}
+
 		//joining the last 2 nodes
 		if len(array) == 2 {
+			fmt.Println("yoda")
 			//index 1 must be the one we just joined. We want to merge index 0 into this one aswell.
 
 			array[1].Name = "(" + array[0].Name + "," + array[1].Name[1:]
-			fmt.Println(len(array))
 
 			dist := rand.Intn(max_length_random) + 1
 
+			fmt.Println("last dist", dist)
 			new_edge_0 := new(Edge)
 			new_edge_0.Distance = dist
 			new_edge_0.Node = array[1]
@@ -147,9 +143,9 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 func generateArray(numberOfLeafs int) []*Node {
 
 	returnArray := make([]*Node, numberOfLeafs)
-	fmt.Println("bevore lop")
+
 	for i := 0; i < numberOfLeafs; i++ {
-		fmt.Println("kek")
+
 		node := new(Node)
 		node.Name = strconv.Itoa(i)
 		fmt.Println(node.Name)
@@ -185,15 +181,14 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 }
 
 func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string) [][]float64 {
-	print("creating the distance")
+	print("creating the distance\n")
 	labelMap := make(map[string]int)
 	for i, v := range labels {
 		labelMap[v] = i
 	}
 
 	for _, node := range tree {
-		fmt.Println("investigating the future")
-		fmt.Println(len(node.Edge_array))
+
 		if len(node.Edge_array) == 1 {
 			//initialize seen map (set) and adding the current node
 			seen := make(map[string]bool)
