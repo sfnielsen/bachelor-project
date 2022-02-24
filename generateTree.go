@@ -24,7 +24,7 @@ func remove(slice []*Node, s int) []*Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func generateTree(size int) (Tree, []string, [][]float64) {
+func generateTree(size int, max_length_random int) (Tree, []string, [][]float64) {
 	array := generateArray(size)
 	tree := make(Tree, 0)
 
@@ -82,11 +82,11 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 
 		//make pointers to joined nodes
 		new_edge_a := new(Edge)
-		new_edge_a.Distance = rand.Intn(20)
+		new_edge_a.Distance = rand.Intn(max_length_random) + 1
 		new_edge_a.Node = element_x
 
 		new_edge_b := new(Edge)
-		new_edge_b.Distance = rand.Intn(20)
+		new_edge_b.Distance = rand.Intn(max_length_random) + 1
 		new_edge_b.Node = element_y
 
 		//append to edges to new node's array
@@ -121,7 +121,7 @@ func generateTree(size int) (Tree, []string, [][]float64) {
 			array[1].Name = "(" + array[0].Name + "," + array[1].Name[1:]
 			fmt.Println(len(array))
 
-			dist := rand.Intn(20)
+			dist := rand.Intn(max_length_random) + 1
 
 			new_edge_0 := new(Edge)
 			new_edge_0.Distance = dist
