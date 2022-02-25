@@ -171,8 +171,8 @@ func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool
 		} else {
 			value := dfs_tree(edge.Node, destination_name, marked)
 			if value != -1 {
-
-				return value + edge.Distance
+				distance = value + edge.Distance
+				return
 			}
 		}
 	}
