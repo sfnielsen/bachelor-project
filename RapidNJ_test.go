@@ -76,6 +76,7 @@ func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	taxa_amount := 50 + rand.Intn(51) //between 50 and 100
 	tree, _, array := generateTree(taxa_amount, 10)
+
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
 		for j := range array {
@@ -93,7 +94,6 @@ func Test_Generated_Tree(t *testing.T) {
 	//check if we can go through the tree and get same distance as written in the distance matrix
 	for i := 0; i < 100; i++ {
 		rand.Seed(time.Now().UnixNano())
-
 		//tree consists of 2n-2 nodes where n are leaves. We can only look at leaves. Note that start and to can be the same
 		idx_start := rand.Intn(len(tree) / 2)
 		idx_to := rand.Intn(len(tree) / 2)
@@ -112,6 +112,10 @@ func Test_Generated_Tree(t *testing.T) {
 	fmt.Println(count_nodes(tree[0], make(map[*Node]bool)), taxa_amount)
 	if count_nodes(tree[0], make(map[*Node]bool)) != (2*taxa_amount - 2) {
 		t.Errorf("amount of nodes in tree does not fit 2n-2 as expected")
+	}
+	//tree should also contain 2n+2
+	if len(tree) != (2*taxa_amount - 2) {
+		t.Errorf("tree should contain excactly all taxa")
 	}
 
 }
