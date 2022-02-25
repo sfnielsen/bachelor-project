@@ -74,7 +74,8 @@ func Test8Taxa_madeUpNumbers_shouldBeChangedLater(t *testing.T) {
 
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	tree, _, array := generateTree(51+rand.Intn(50), 10)
+	taxa_amount := 50 + rand.Intn(51) //between 50 and 100
+	tree, _, array := generateTree(taxa_amount, 10)
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
 		for j := range array {
@@ -100,11 +101,17 @@ func Test_Generated_Tree(t *testing.T) {
 		node_from := tree[idx_start]
 		node_to_name := tree[idx_to].Name
 
-		distance := dfs_tree(node_from, node_to_name, 0, make(map[*Node]bool))
+		distance := dfs_tree(node_from, node_to_name, make(map[*Node]bool))
 
 		if distance != array[idx_start][idx_to] {
 			t.Errorf("Distance should be the same. ")
 		}
+	}
+
+	//test whether the nodes match the expected 2n+2, where n is taxa
+	fmt.Println(count_nodes(tree[0], make(map[*Node]bool)), taxa_amount)
+	if count_nodes(tree[0], make(map[*Node]bool)) != (2*taxa_amount - 2) {
+		t.Errorf("amount of nodes in tree does not fit 2n-2 as expected")
 	}
 
 }
@@ -139,7 +146,7 @@ func transposeMatrix(matrix [][]float64) [][]float64 {
 }
 
 //depth first searching on a tree of nodes starting at current_node. Note that -1 means that destionation was not found
-func dfs_tree(current_node *Node, destination_name string, sum float64, marked map[*Node]bool) (distance float64) {
+func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool) (distance float64) {
 	marked[current_node] = true
 
 	if current_node.Name == destination_name {
@@ -158,11 +165,31 @@ func dfs_tree(current_node *Node, destination_name string, sum float64, marked m
 			}
 
 		} else {
-			value := dfs_tree(edge.Node, destination_name, sum, marked)
+			value := dfs_tree(edge.Node, destination_name, marked)
 			if value != -1 {
+
 				return value + edge.Distance
 			}
 		}
 	}
 	return -1
+}
+
+//should take a node and traverse the tree the node is connected to. Returning the total amount of nodes in the tree. This should be 2*taxa-2
+func count_nodes(current_node *Node, marked map[*Node]bool) (total_nodes int) {
+	marked[current_node] = true
+	sum := 1
+	for _, edge := range current_node.Edge_array {
+		if _, ok := marked[edge.Node]; ok {
+			continue
+		}
+
+		//if edgearray we are going to only has one edge it must be a dead end
+		if len(edge.Node.Edge_array) == 1 {
+			sum++
+		} else {
+			sum += count_nodes(edge.Node, marked)
+		}
+	}
+	return sum
 }
