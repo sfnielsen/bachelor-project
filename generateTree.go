@@ -9,12 +9,12 @@ import (
 
 type Edge struct {
 	Node     *Node
-	Distance int
+	Distance float64
 }
 
 type Node struct {
 	Name string
-	//if len(edge_array) == 1, the Node should be a 'leaf'
+	//if len(edge_array) == 1, we consider the node a 'leaf'
 	Edge_array []*Edge
 }
 
@@ -53,8 +53,7 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 		for random_x == random_y {
 			random_y = rand.Intn(len(array))
 		}
-		fmt.Println("swamp")
-		fmt.Println("length of array:", len(array))
+
 		fmt.Println("drawn")
 		fmt.Println(random_x)
 		fmt.Println(random_y)
@@ -77,11 +76,11 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 		//make pointers to joined nodes
 		new_edge_a := new(Edge)
-		new_edge_a.Distance = rand.Intn(max_length_random) + 1
+		new_edge_a.Distance = float64(rand.Intn(max_length_random) + 1)
 		new_edge_a.Node = element_x
 
 		new_edge_b := new(Edge)
-		new_edge_b.Distance = rand.Intn(max_length_random) + 1
+		new_edge_b.Distance = float64(rand.Intn(max_length_random) + 1)
 		new_edge_b.Node = element_y
 
 		//append to edges to new node's array
@@ -111,7 +110,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 		//joining the last 2 nodes
 		if len(array) == 2 {
-			fmt.Println("yoda")
 			//index 1 must be the one we just joined. We want to merge index 0 into this one aswell.
 
 			array[1].Name = "(" + array[0].Name + "," + array[1].Name[1:]
@@ -120,11 +118,11 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 			fmt.Println("last dist", dist)
 			new_edge_0 := new(Edge)
-			new_edge_0.Distance = dist
+			new_edge_0.Distance = float64(dist)
 			new_edge_0.Node = array[1]
 
 			new_edge_1 := new(Edge)
-			new_edge_1.Distance = dist
+			new_edge_1.Distance = float64(dist)
 			new_edge_1.Node = array[0]
 
 			array[0].Edge_array = append(array[0].Edge_array, new_edge_0)
