@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -69,6 +70,25 @@ func Test8Taxa_madeUpNumbers_shouldBeChangedLater(t *testing.T) {
 	newick_result := neighborJoin(D, S, labels, deadRecords)
 	if newick_result != "(B:5.765625,((((G:1.250000,H:11.750000):23.208333,A:0.791667):4.718750,F:29.781250):1.281250,((C:0.333333,E:68.666667):18.200000,D:11.800000):2.968750):5.765625);" {
 		t.Errorf("hehehe")
+	}
+}
+
+func Test_max_taxa_of_generated_tree(t *testing.T) {
+	prev_time := int64(0)
+	quadratic := .0
+	for i := 0; i < 12; i++ {
+
+		taxa_amount := int(math.Pow(2, float64(i))) // power of 2
+		time_start := time.Now().UnixMilli()
+		generateTree(taxa_amount, 1)
+		time_end := time.Now().UnixMilli()
+		time := time_end - time_start
+
+		if time != 0 && prev_time != 0 {
+			quadratic = float64(time) / float64(prev_time*4) //suspected taxa ^ 2 running time
+		}
+		prev_time = time
+		fmt.Printf("time for generating %d taxa is %d milliseconds  \nQuadratic time: %f.\n", taxa_amount, time, quadratic)
 	}
 }
 
@@ -196,4 +216,9 @@ func count_nodes(current_node *Node, marked map[*Node]bool) (total_nodes int) {
 		}
 	}
 	return sum
+}
+
+func compare_trees(tree1 Tree, tree2 Tree) bool {
+
+	return true
 }

@@ -1,23 +1,27 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
+//Edge is a structure stored in a Node. It keeps tracks of the distance and a destination Node (different from the Node it is stored in)
 type Edge struct {
 	Node     *Node
 	Distance float64
 }
 
+//Node is what makes up the phylegenetic trees. Every taxa is represented by a Node as well as every intersection between edges.
 type Node struct {
 	Name string
-	//if len(edge_array) == 1, we consider the node a 'leaf'
+	//if len(edge_array) == 1, we consider the node a 'leaf/tip'
 	Edge_array []*Edge
 }
 
+//the idea of the Tree structure is that it hold all nodes, both the labelled and interconnecting nodes
+//for a given phylegenetic tree.
 type Tree []*Node
 
 func remove(slice []*Node, s int) []*Node {
@@ -53,11 +57,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 		for random_x == random_y {
 			random_y = rand.Intn(len(array))
 		}
-
-		fmt.Println("drawn")
-		fmt.Println(random_x)
-		fmt.Println(random_y)
-		fmt.Println("oky")
 
 		element_x := array[random_x]
 		element_y := array[random_y]
@@ -104,10 +103,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 		tree = append(tree, new_node)
 
-		for i := 0; i < len(array); i++ {
-			fmt.Println(array[i].Name)
-		}
-
 		//joining the last 2 nodes
 		if len(array) == 2 {
 			//index 1 must be the one we just joined. We want to merge index 0 into this one aswell.
@@ -116,7 +111,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 			dist := rand.Intn(max_length_random) + 1
 
-			fmt.Println("last dist", dist)
 			new_edge_0 := new(Edge)
 			new_edge_0.Distance = float64(dist)
 			new_edge_0.Node = array[1]
@@ -132,8 +126,6 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 		}
 	}
 
-	fmt.Println(array[0].Name)
-
 	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
 	return tree, labels, distanceMatrix
 }
@@ -146,10 +138,7 @@ func generateArray(numberOfLeafs int) []*Node {
 
 		node := new(Node)
 		node.Name = strconv.Itoa(i)
-		fmt.Println(node.Name)
-		fmt.Println(returnArray)
 		returnArray[i] = node
-		fmt.Println(returnArray)
 	}
 	return returnArray
 }
@@ -179,7 +168,7 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 }
 
 func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string) [][]float64 {
-	print("creating the distance\n")
+
 	labelMap := make(map[string]int)
 	for i, v := range labels {
 		labelMap[v] = i
@@ -198,8 +187,6 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 			//we start from the only node that our current label connects to.
 			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
 				float64(node.Edge_array[0].Distance), seen, labelMap)
-
-			fmt.Println(distanceMatrix[labelMap[node.Name]])
 		}
 	}
 	return distanceMatrix
@@ -207,8 +194,4 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 
 func sortTree() {
 
-}
-
-func compare_trees(tree1 Tree, tree2 Tree) bool {
-	return true
 }
