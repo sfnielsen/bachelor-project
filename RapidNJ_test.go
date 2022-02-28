@@ -94,14 +94,13 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
-	taxa_amount := 50 + rand.Intn(51) //between 50 and 100
+	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
 	tree, _, array := generateTree(taxa_amount, 10)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
 		for j := range array {
 			if i == j && array[i][j] != 0 {
-				fmt.Println(i, j)
 				t.Errorf("diagonal not 0")
 			}
 			if array[i][j] != array[j][i] {
@@ -121,7 +120,7 @@ func Test_Generated_Tree(t *testing.T) {
 		node_from := tree[idx_start]
 		node_to_name := tree[idx_to].Name
 
-		distance := dfs_tree(node_from, node_to_name, make(map[*Node]bool))
+		distance, _ := dfs_tree(node_from, node_to_name, make(map[*Node]bool))
 
 		if distance != array[idx_start][idx_to] {
 			t.Errorf("Distance should be the same. ")
@@ -129,7 +128,6 @@ func Test_Generated_Tree(t *testing.T) {
 	}
 
 	//test whether the nodes match the expected 2n+2, where n is taxa
-	fmt.Println(count_nodes(tree[0], make(map[*Node]bool)), taxa_amount)
 	if count_nodes(tree[0], make(map[*Node]bool)) != (2*taxa_amount - 2) {
 		t.Errorf("amount of nodes in tree does not fit 2n-2 as expected")
 	}
@@ -170,11 +168,12 @@ func transposeMatrix(matrix [][]float64) [][]float64 {
 }
 
 //depth first searching on a tree of nodes starting at current_node. Note that -1 means that destionation was not found
-func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool) (distance float64) {
+func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool) (float64, *Node) {
 	marked[current_node] = true
+	distance := .0
 
 	if current_node.Name == destination_name {
-		return
+		return distance, current_node
 	}
 	for _, edge := range current_node.Edge_array {
 		if _, ok := marked[edge.Node]; ok {
@@ -185,18 +184,18 @@ func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool
 			//check if leaf is the desired destionation
 			if edge.Node.Name == destination_name {
 				distance += edge.Distance
-				return
+				return distance, current_node
 			}
 
 		} else {
-			value := dfs_tree(edge.Node, destination_name, marked)
-			if value != -1 {
+			value, node := dfs_tree(edge.Node, destination_name, marked)
+			if node != nil {
 				distance = value + edge.Distance
-				return
+				return distance, node
 			}
 		}
 	}
-	return -1
+	return -1, nil
 }
 
 //should take a node and traverse the tree the node is connected to. Returning the total amount of nodes in the tree. This should be 2*taxa-2
@@ -219,6 +218,21 @@ func count_nodes(current_node *Node, marked map[*Node]bool) (total_nodes int) {
 }
 
 func compare_trees(tree1 Tree, tree2 Tree) bool {
+	var tree1_node *Node
+	for _, v := range tree1 {
+		//identify some actual taxa
+		if len(v.Edge_array) == 1 {
+			tree1_node = v
+			break
+		}
+	}
 
+	_, tree2_node := dfs_tree(tree2[0], tree1_node.Name, make(map[*Node]bool))
+
+	//printing so that compiler does not complain xD
+	fmt.Println(tree2_node)
+	//############################
+	//now the two identical taxa/tip nodes are found and we can start the proces of traversing the tree from this node and comparing.
+	//############################
 	return true
 }
