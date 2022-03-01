@@ -156,7 +156,7 @@ func TestMakeTree(t *testing.T) {
 }
 
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(8, 20)
+	_, labels, distanceMatrix := generateTree(7, 20)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -172,9 +172,9 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 
 	fmt.Println(len(resulting_tree))
 
-	emptyMatrix := make([][]float64, len(labels))
+	emptyMatrix := make([][]float64, len(original_labels))
 	for i := range distanceMatrix {
-		emptyMatrix[i] = make([]float64, len(labels))
+		emptyMatrix[i] = make([]float64, len(original_labels))
 	}
 
 	fmt.Println("hello hello")

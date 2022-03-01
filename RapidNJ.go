@@ -94,32 +94,37 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
+	fmt.Println("darecords", dead_records)
+
 	for r, row := range S {
 		fmt.Println("hey", row, len(row))
-		if r == 0 {
-			continue
-		}
-		for c := range row {
-			s := S[r][c]
+
+		for i, _ := range row {
+			if i == 0 {
+				fmt.Println("I==0 case")
+				continue
+			}
+			s := S[r][i]
+
 			c_to_cD := dead_records[s.index_j]
-			fmt.Println(c, c_to_cD)
+
 			//check if dead record
 			if c_to_cD == -1 {
+				fmt.Println("C_TO_CD CASE")
 				continue
 			}
 			// case where i == j
 			if r == c_to_cD {
+				fmt.Println("I==J CASE")
 				continue
 			}
 			if s.value-u[r]-max_u > q_min {
-				fmt.Println("breaking")
 				break
 			}
 			if s.value-u[r]-u[c_to_cD] < q_min {
 				cur_i = r
-				cur_j = dead_records[s.index_j]
+				cur_j = s.index_j
 				q_min = s.value - u[r] - u[c_to_cD]
-				fmt.Println(q_min, "lautis")
 			}
 		}
 	}
@@ -160,14 +165,18 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	cur_i, cur_j := rapidNeighborJoining(u, D, S, dead_records)
 
+	j_in_D := dead_records[cur_j]
+
+	fmt.Println("indices", cur_i, cur_j)
+
 	if NewickFlag {
 
-		if cur_i == -1 || cur_j == -1 {
-			fmt.Println(cur_i, cur_j, "BABABBBA tis", dead_records, len(D))
+		if cur_i == -1 || j_in_D == -1 {
+			fmt.Println(cur_i, j_in_D, "BABABBBA tis", dead_records, len(D))
 		}
 		//Distance to new point where they meet
-		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
-		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
+		v_iu := fmt.Sprintf("%f", D[cur_i][j_in_D]/2+(u[cur_i]-u[j_in_D])/2)
+		v_ju := fmt.Sprintf("%f", D[cur_i][j_in_D]/2+(u[cur_j]-u[j_in_D])/2)
 		//convert to string
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)
@@ -175,12 +184,12 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		//make sure p_i is the smallest index and dont change it w.r.t newick implementation
 		temp_i := 0
 		temp_j := 0
-		if cur_i > cur_j {
-			temp_i = cur_j
+		if cur_i > j_in_D {
+			temp_i = j_in_D
 			temp_j = cur_i
 		} else {
 			temp_i = cur_i
-			temp_j = cur_j
+			temp_j = j_in_D
 		}
 
 		distance_to_y, _ := strconv.ParseFloat(v_iu, 64)
@@ -192,8 +201,8 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		array = append(array[:temp_j], array[temp_j+1:]...)
 
 		//creating newick form
-		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
-		labels = append(labels[:cur_j], labels[cur_j+1:]...)
+		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[j_in_D] + ":" + v_ju + ")"
+		labels = append(labels[:j_in_D], labels[j_in_D+1:]...)
 
 		for i, v := range labels {
 			fmt.Println(i, v, "This is god")
@@ -201,7 +210,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 	}
 
 	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
-
+	fmt.Println("newrecords", dead_records_new)
 	for i := 0; i < len(labels); i++ {
 		fmt.Println(labels[i])
 	}
@@ -242,21 +251,24 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
 	//make sure p_i is the smallest index
-	if p_i > p_j {
+
+	p_j_in_D := dead_records[p_j]
+
+	if p_i > p_j_in_D {
 		temp := p_i
-		p_i = p_j
-		p_j = temp
+		p_i = p_j_in_D
+		p_j_in_D = temp
 	}
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
 		}
-		if p_j == k {
+		if p_j_in_D == k {
 			continue
 		} else {
 			//Overwrite p_i as merge ij
-			temp := (D[p_i][k] + D[p_j][k] - D[p_i][p_j]) / 2
+			temp := (D[p_i][k] + D[p_j_in_D][k] - D[p_i][p_j_in_D]) / 2
 			D[p_i][k] = temp
 			D[k][p_i] = temp
 
@@ -264,11 +276,11 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	}
 
 	//delete row in both D and S
-	D_new := append(D[:p_j], D[p_j+1:]...)
+	D_new := append(D[:p_j_in_D], D[p_j_in_D+1:]...)
 
 	//delete column in D
 	for i := 0; i < len(D_new); i++ {
-		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
+		D_new[i] = append(D_new[i][:p_j_in_D], D_new[i][p_j_in_D+1:]...)
 
 	}
 
@@ -276,11 +288,6 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	S_new := S
 
 	//overwrite the row p_i where we want to store merged ij
-	fmt.Println(p_i, p_j, len(D[p_i]))
-	fmt.Println("HAHA")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
-	}
 	for j := 0; j < len(D[p_i]); j++ {
 		var tuple Tuple
 		tuple.value = D[p_i][j]
@@ -296,10 +303,6 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 		return (S_new[p_i][a].value < S_new[p_i][b].value)
 	})
 
-	fmt.Println("asdhf")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
-	}
 	S_new = append(S[:p_j], S[p_j+1:]...)
 
 	//assign dead records -> -1
