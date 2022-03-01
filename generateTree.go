@@ -41,6 +41,7 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 	//append all staring nodes to tree and create labels
 	labels := make([]string, 0)
 
+	//maybe it is not necessary to initialize new array makybe try without
 	for _, value := range array {
 		labels = append(labels, value.Name)
 		tree = append(tree, value)
@@ -69,36 +70,12 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 			array = remove(array, random_y)
 		}
 
-		//initialize new node and set its name as appended string combination
-		new_node := new(Node)
-		new_node.Name = "(" + element_x.Name + "," + element_y.Name + ")"
+		distance_to_x := float64(rand.Intn(max_length_random) + 1)
+		distance_to_y := float64(rand.Intn(max_length_random) + 1)
 
-		//make pointers to joined nodes
-		new_edge_a := new(Edge)
-		new_edge_a.Distance = float64(rand.Intn(max_length_random) + 1)
-		new_edge_a.Node = element_x
+		var new_node *Node = integrateNewNode(element_x, element_y, distance_to_x, distance_to_y)
 
-		new_edge_b := new(Edge)
-		new_edge_b.Distance = float64(rand.Intn(max_length_random) + 1)
-		new_edge_b.Node = element_y
-
-		//append to edges to new node's array
-		new_node.Edge_array = append(new_node.Edge_array, new_edge_a)
-		new_node.Edge_array = append(new_node.Edge_array, new_edge_b)
-
-		//make pointers to new node
-		edge_to_new_node_from_a := new(Edge)
-		edge_to_new_node_from_a.Distance = new_edge_a.Distance
-		edge_to_new_node_from_a.Node = new_node
-
-		edge_to_new_node_from_b := new(Edge)
-		edge_to_new_node_from_b.Distance = new_edge_b.Distance
-		edge_to_new_node_from_b.Node = new_node
-
-		//append edge to new node to joined neighbours' edge-arrays
-		element_x.Edge_array = append(element_x.Edge_array, edge_to_new_node_from_a)
-		element_y.Edge_array = append(element_y.Edge_array, edge_to_new_node_from_b)
-
+		// we need both - array holds only the last one in the end, tree holds every node
 		array = append(array, new_node)
 
 		tree = append(tree, new_node)
@@ -128,6 +105,40 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 	distanceMatrix = createDistanceMatrix(distanceMatrix, tree, labels)
 	return tree, labels, distanceMatrix
+}
+
+func integrateNewNode(element_x *Node, element_y *Node, distance_to_x float64, distance_to_y float64) *Node {
+	//initialize new node and set its name as appended string combination
+	new_node := new(Node)
+	new_node.Name = "(" + element_x.Name + "," + element_y.Name + ")"
+
+	//make pointers to joined nodes
+	new_edge_a := new(Edge)
+	new_edge_a.Distance = distance_to_x
+	new_edge_a.Node = element_x
+
+	new_edge_b := new(Edge)
+	new_edge_b.Distance = distance_to_y
+	new_edge_b.Node = element_y
+
+	//append to edges to new node's array
+	new_node.Edge_array = append(new_node.Edge_array, new_edge_a)
+	new_node.Edge_array = append(new_node.Edge_array, new_edge_b)
+
+	//make pointers to new node
+	edge_to_new_node_from_a := new(Edge)
+	edge_to_new_node_from_a.Distance = new_edge_a.Distance
+	edge_to_new_node_from_a.Node = new_node
+
+	edge_to_new_node_from_b := new(Edge)
+	edge_to_new_node_from_b.Distance = new_edge_b.Distance
+	edge_to_new_node_from_b.Node = new_node
+
+	//append edge to new node to joined neighbours' edge-arrays
+	element_x.Edge_array = append(element_x.Edge_array, edge_to_new_node_from_a)
+	element_y.Edge_array = append(element_y.Edge_array, edge_to_new_node_from_b)
+
+	return new_node
 }
 
 func generateArray(numberOfLeafs int) []*Node {
@@ -170,6 +181,8 @@ func traverseTree(distanceRow []float64, node Node, sum float64, seen map[string
 func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string) [][]float64 {
 
 	labelMap := make(map[string]int)
+
+	//we need this to make distance matrix rows, so every row is in same order of labels.
 	for i, v := range labels {
 		labelMap[v] = i
 	}
@@ -183,8 +196,8 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 
 			distanceRow := make([]float64, len(labels))
 
-			//this assumes that index 0 in array holds the lexicographicly first node. Perhaps sorting should be implemented to ensure this property
-			//we start from the only node that our current label connects to.
+			//this assumes that index 0 in array holds the lexicographicly frst node. Perhaps sorting should be implemented to ensure this property
+			//we start from the only node that our current label connects to.i
 			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
 				float64(node.Edge_array[0].Distance), seen, labelMap)
 		}

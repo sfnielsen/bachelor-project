@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"sort"
+	"strconv"
 )
 
 var NewickFlag bool = true
@@ -23,7 +24,18 @@ func main() {
 	S := initSmatrix(D)
 	dead_records := initDeadRecords(D)
 
-	newick_result := neighborJoin(D, S, labels, dead_records)
+	var treeBanana Tree
+	var array Tree
+	if NewickFlag {
+		array = generateTreeForRapidNJ(labels)
+		for _, node := range array {
+			treeBanana = append(treeBanana, node)
+		}
+	} else {
+		array = make(Tree, 0)
+	}
+
+	newick_result, _ := neighborJoin(D, S, labels, dead_records, array, treeBanana)
 	fmt.Println(newick_result)
 }
 
@@ -78,9 +90,6 @@ func MaxIntSlice(v []float64) (m float64) {
 }
 
 func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int) (int, int) {
-
-	fmt.Println("swampgod")
-
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
@@ -115,9 +124,19 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	return cur_i, cur_j
 }
 
-func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int) string {
+func generateTreeForRapidNJ(labels []string) Tree {
+	tree := make(Tree, 0)
 
-	fmt.Println(dead_records)
+	for _, label := range labels {
+		node_to_append := new(Node)
+		node_to_append.Name = label
+		tree = append(tree, node_to_append)
+	}
+	return tree
+}
+
+func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, treeBanana Tree) (string, Tree) {
+
 	n := len(D)
 
 	u := make([]float64, n)
@@ -146,6 +165,25 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)
 
+		//make sure p_i is the smallest index and dont change it w.r.t newick implementation
+		temp_i := 0
+		temp_j := 0
+		if cur_i > cur_j {
+			temp_i = cur_j
+			temp_j = cur_i
+		} else {
+			temp_i = cur_i
+			temp_j = cur_j
+		}
+
+		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
+		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
+
+		newNode := integrateNewNode(array[temp_i], array[temp_j], distance_to_x, distance_to_y)
+		array[temp_i] = newNode
+		treeBanana = append(treeBanana, newNode)
+		array = append(array[:temp_j], array[temp_j+1:]...)
+
 		//creating newick form
 		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
@@ -159,7 +197,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return neighborJoin(D_new, S_new, labels, dead_records_new)
+		return neighborJoin(D_new, S_new, labels, dead_records_new, array, treeBanana)
 	} else {
 		if NewickFlag {
 			fmt.Println(cur_i, cur_j)
@@ -170,11 +208,11 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 			if err != nil {
 				panic(err)
 			}
-			return newick
+			return newick, treeBanana
 
 		}
 	}
-	return "error" //this case should not be possible
+	return "error", treeBanana //this case should not be possible
 }
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {

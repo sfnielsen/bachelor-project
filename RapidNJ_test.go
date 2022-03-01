@@ -8,10 +8,17 @@ import (
 	"time"
 )
 
-func standardSetup(D [][]float64) ([][]Tuple, map[int]int) {
+func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
-	return S, deadRecords
+	var treeBanana Tree
+	var array Tree
+	array = generateTreeForRapidNJ(labels)
+
+	for _, node := range array {
+		treeBanana = append(treeBanana, node)
+	}
+	return S, deadRecords, array, treeBanana
 }
 func Test4Taxa(t *testing.T) {
 	labels := []string{
@@ -23,11 +30,12 @@ func Test4Taxa(t *testing.T) {
 		{21, 12, 0, 14},
 		{27, 18, 14, 0},
 	}
-	S, deadRecords := standardSetup(D)
+	S, deadRecords, array, treeBanana := standardSetup(D, labels)
 
-	newick_result := neighborJoin(D, S, labels, deadRecords)
+	newick_result, _ := neighborJoin(D, S, labels, deadRecords, array, treeBanana)
+	print()
 	if newick_result != "((B:4.000000,A:13.000000):2.000000,(C:4.000000,D:10.000000):2.000000);" {
-		t.Errorf("hehehe")
+		t.Errorf(newick_result)
 	}
 
 }
@@ -42,9 +50,10 @@ func Test4Taxa_made_up_numbers(t *testing.T) {
 		{18, 12, 0, 14},
 		{24, 18, 14, 0},
 	}
-	S, deadRecords := standardSetup(D)
+	S, deadRecords, array, treeBanana := standardSetup(D, labels)
 
-	newick_result := neighborJoin(D, S, labels, deadRecords)
+	newick_result, _ := neighborJoin(D, S, labels, deadRecords, array, treeBanana)
+
 	if newick_result != "((B:2.500000,A:8.500000):2.750000,(C:4.000000,D:10.000000):2.750000);" {
 		t.Errorf("hehehe")
 	}
@@ -65,9 +74,9 @@ func Test8Taxa_madeUpNumbers_shouldBeChangedLater(t *testing.T) {
 		{33, 57, 92, 84, 154, 54, 13, 0},
 	}
 
-	S, deadRecords := standardSetup(D)
+	S, deadRecords, array, treeBanana := standardSetup(D, labels)
 
-	newick_result := neighborJoin(D, S, labels, deadRecords)
+	newick_result, _ := neighborJoin(D, S, labels, deadRecords, array, treeBanana)
 	if newick_result != "(B:5.765625,((((G:1.250000,H:11.750000):23.208333,A:0.791667):4.718750,F:29.781250):1.281250,((C:0.333333,E:68.666667):18.200000,D:11.800000):2.968750):5.765625);" {
 		t.Errorf("hehehe")
 	}
@@ -76,7 +85,7 @@ func Test8Taxa_madeUpNumbers_shouldBeChangedLater(t *testing.T) {
 func Test_max_taxa_of_generated_tree(t *testing.T) {
 	prev_time := int64(0)
 	quadratic := .0
-	for i := 0; i < 12; i++ {
+	for i := 0; i < 5; i++ {
 
 		taxa_amount := int(math.Pow(2, float64(i))) // power of 2
 		time_start := time.Now().UnixMilli()
@@ -146,11 +155,46 @@ func TestMakeTree(t *testing.T) {
 	}
 }
 
+func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
+	_, labels, distanceMatrix := generateTree(10, 20)
+	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+
+	_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+
+	emptyMatrix := make([][]float64, len(labels))
+	for i := range distanceMatrix {
+		emptyMatrix[i] = make([]float64, len(labels))
+	}
+
+	resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, labels)
+	for i := 0; i < len(resulting_distance_matrix); i++ {
+		fmt.Println(resulting_distance_matrix[i])
+	}
+	are_they_the_same := compareDistanceMatrixes(distanceMatrix, resulting_distance_matrix)
+
+	if !are_they_the_same {
+		t.Errorf("failure :(")
+	}
+
+}
+
 //#############################################
 //helper functions we use in the test framework
 //#############################################
 
 //this is not used could perhaps be deleted
+
+func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
+	for i, row := range matrix1 {
+		for j := range row {
+			if matrix1[i][j] != matrix2[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func transposeMatrix(matrix [][]float64) [][]float64 {
 	size := len(matrix)
 	transposed := make([][]float64, size)
