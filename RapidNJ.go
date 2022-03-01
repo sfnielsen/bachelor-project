@@ -95,6 +95,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	cur_i, cur_j := -1, -1
 
 	for r, row := range S {
+		fmt.Println("hey", row, len(row))
 		if r == 0 {
 			continue
 		}
@@ -111,12 +112,14 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 				continue
 			}
 			if s.value-u[r]-max_u > q_min {
+				fmt.Println("breaking")
 				break
 			}
 			if s.value-u[r]-u[c_to_cD] < q_min {
 				cur_i = r
 				cur_j = dead_records[s.index_j]
 				q_min = s.value - u[r] - u[c_to_cD]
+				fmt.Println(q_min, "lautis")
 			}
 		}
 	}
@@ -158,6 +161,10 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 	cur_i, cur_j := rapidNeighborJoining(u, D, S, dead_records)
 
 	if NewickFlag {
+
+		if cur_i == -1 || cur_j == -1 {
+			fmt.Println(cur_i, cur_j, "BABABBBA tis", dead_records, len(D))
+		}
 		//Distance to new point where they meet
 		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
 		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
@@ -176,8 +183,8 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 			temp_j = cur_j
 		}
 
-		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
-		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
+		distance_to_y, _ := strconv.ParseFloat(v_iu, 64)
+		distance_to_x, _ := strconv.ParseFloat(v_ju, 64)
 
 		newNode := integrateNewNode(array[temp_i], array[temp_j], distance_to_x, distance_to_y)
 		array[temp_i] = newNode
@@ -187,6 +194,10 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		//creating newick form
 		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
+
+		for i, v := range labels {
+			fmt.Println(i, v, "This is god")
+		}
 	}
 
 	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
@@ -208,6 +219,20 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 			if err != nil {
 				panic(err)
 			}
+
+			new_edge_0 := new(Edge)
+			new_edge_0.Distance = D_new[0][1]
+			new_edge_0.Node = array[1]
+
+			new_edge_1 := new(Edge)
+			new_edge_1.Distance = D_new[0][1]
+			new_edge_1.Node = array[0]
+
+			array[0].Edge_array = append(array[0].Edge_array, new_edge_0)
+			array[1].Edge_array = append(array[1].Edge_array, new_edge_1)
+
+			array = remove(array, 0)
+
 			return newick, treeBanana
 
 		}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -185,9 +185,15 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	//we need this to make distance matrix rows, so every row is in same order of labels.
 	for i, v := range labels {
 		labelMap[v] = i
+		fmt.Println("bab", v)
 	}
 
 	for _, node := range tree {
+
+		fmt.Println(node.Name, len(node.Edge_array))
+		for _, v := range node.Edge_array {
+			fmt.Println("BABUSKAKA", node.Name, v.Distance, v.Node.Name)
+		}
 
 		if len(node.Edge_array) == 1 {
 			//initialize seen map (set) and adding the current node
@@ -198,6 +204,8 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 
 			//this assumes that index 0 in array holds the lexicographicly frst node. Perhaps sorting should be implemented to ensure this property
 			//we start from the only node that our current label connects to.i
+			fmt.Println(traverseTree(distanceRow, *node.Edge_array[0].Node,
+				float64(node.Edge_array[0].Distance), seen, labelMap))
 			distanceMatrix[labelMap[node.Name]] = traverseTree(distanceRow, *node.Edge_array[0].Node,
 				float64(node.Edge_array[0].Distance), seen, labelMap)
 		}

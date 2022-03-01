@@ -55,7 +55,7 @@ func Test4Taxa_made_up_numbers(t *testing.T) {
 	newick_result, _ := neighborJoin(D, S, labels, deadRecords, array, treeBanana)
 
 	if newick_result != "((B:2.500000,A:8.500000):2.750000,(C:4.000000,D:10.000000):2.750000);" {
-		t.Errorf("hehehe")
+		t.Errorf("%s hehehe", newick_result)
 	}
 
 }
@@ -156,17 +156,34 @@ func TestMakeTree(t *testing.T) {
 }
 
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(10, 20)
+	_, labels, distanceMatrix := generateTree(8, 20)
+	original_labels := make([]string, len(labels))
+	copy(original_labels, labels)
+
+	original_dist_mat := make([][]float64, len(distanceMatrix))
+	for i := range distanceMatrix {
+		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+		copy(original_dist_mat[i], distanceMatrix[i])
+	}
+
 	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
 
 	_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+
+	fmt.Println(len(resulting_tree))
 
 	emptyMatrix := make([][]float64, len(labels))
 	for i := range distanceMatrix {
 		emptyMatrix[i] = make([]float64, len(labels))
 	}
 
-	resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, labels)
+	fmt.Println("hello hello")
+	for i := 0; i < len(original_dist_mat); i++ {
+		fmt.Println(original_dist_mat[i])
+	}
+
+	fmt.Println("???")
+	resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
 	for i := 0; i < len(resulting_distance_matrix); i++ {
 		fmt.Println(resulting_distance_matrix[i])
 	}
