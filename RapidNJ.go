@@ -94,31 +94,41 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
+	fmt.Println("darecords", dead_records)
+
 	for r, row := range S {
 		fmt.Println("hey", row, len(row))
 
-		for c := range row {
-			s := S[r][c]
-			c_to_cD := dead_records[s.index_j]
-			fmt.Println(c, s.value, c_to_cD)
-			//check if dead record
-			if c_to_cD == -1 {
+		for i, _ := range row {
+			if dead_records[r] == -1 {
 				continue
 			}
-			// case where i == j
-			if r == c_to_cD {
+
+			if i == 0 {
+				fmt.Println("I==0 case")
+				continue
+			}
+			s := S[r][i]
+
+			if dead_records[s.index_j] == r {
+				continue
+			}
+
+			c_to_cD := dead_records[s.index_j]
+
+			//check if dead record
+			if c_to_cD == -1 {
+				fmt.Println(s.index_j, "C_TO_CD CASE")
 				continue
 			}
 			if s.value-u[r]-max_u > q_min {
-				fmt.Println("breaking")
 				break
 			}
-			fmt.Println("some length should be the same; ", len(u), len(D), len(S))
 			if s.value-u[r]-u[c_to_cD] < q_min {
+				fmt.Println("found one")
 				cur_i = r
-				cur_j = dead_records[s.index_j]
+				cur_j = s.index_j
 				q_min = s.value - u[r] - u[c_to_cD]
-				fmt.Println(q_min, "lautis")
 			}
 		}
 	}
@@ -157,29 +167,48 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		u[i] = sum / float64(n-2)
 	}
 
-	//gets two indexes in D
 	cur_i, cur_j := rapidNeighborJoining(u, D, S, dead_records)
 
+	var j_in_D int
+	j_in_D = dead_records[cur_j]
+
+	fmt.Println("indices", cur_i, cur_j)
+
 	if NewickFlag {
+
+		if cur_i == -1 || j_in_D == -1 {
+			fmt.Println(cur_i, j_in_D, "BABABBBA tis", dead_records, len(D))
+		}
 		//Distance to new point where they meet
-		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
-		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
+		fmt.Println(cur_i, j_in_D)
+		v_iu := fmt.Sprintf("%f", D[cur_i][j_in_D]/2+(u[cur_i]-u[j_in_D])/2)
+		v_ju := fmt.Sprintf("%f", D[cur_i][j_in_D]/2+(u[j_in_D]-u[cur_i])/2)
 		//convert to string
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)
 
-		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
-		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
+		//make sure p_i is the smallest index and dont change it w.r.t newick implementation
+		temp_i := 0
+		temp_j := 0
+		if cur_i > j_in_D {
+			temp_i = j_in_D
+			temp_j = cur_i
+		} else {
+			temp_i = cur_i
+			temp_j = j_in_D
+		}
 
-		newNode := integrateNewNode(array[cur_i], array[cur_j], distance_to_x, distance_to_y)
-		array[cur_i] = newNode
+		distance_to_y, _ := strconv.ParseFloat(v_iu, 64)
+		distance_to_x, _ := strconv.ParseFloat(v_ju, 64)
+
+		newNode := integrateNewNode(array[temp_i], array[temp_j], distance_to_x, distance_to_y)
+		array[temp_i] = newNode
 		treeBanana = append(treeBanana, newNode)
-
-		array = append(array[:cur_j], array[cur_j+1:]...)
+		array = append(array[:temp_j], array[temp_j+1:]...)
 
 		//creating newick form
-		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
-		labels = append(labels[:cur_j], labels[cur_j+1:]...)
+		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[j_in_D] + ":" + v_ju + ")"
+		labels = append(labels[:j_in_D], labels[j_in_D+1:]...)
 
 		for i, v := range labels {
 			fmt.Println(i, v, "This is god")
@@ -187,12 +216,10 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 	}
 
 	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
-
-	fmt.Println("what is going")
+	fmt.Println("newrecords", dead_records_new)
 	for i := 0; i < len(labels); i++ {
 		fmt.Println(labels[i])
 	}
-	fmt.Println("okay nice")
 
 	//stop maybe
 	if len(D_new) > 2 {
@@ -230,92 +257,94 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
 	//make sure p_i is the smallest index
-	if p_i > p_j {
+
+	p_j_in_D := dead_records[p_j]
+
+	if p_i > p_j_in_D {
 		temp := p_i
-		p_i = p_j
-		p_j = temp
+		p_i = p_j_in_D
+		p_j_in_D = temp
 	}
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
 		}
-		if p_j == k {
+		if p_j_in_D == k {
 			continue
 		} else {
 			//Overwrite p_i as merge ij
-			temp := (D[p_i][k] + D[p_j][k] - D[p_i][p_j]) / 2
+			temp := (D[p_i][k] + D[p_j_in_D][k] - D[p_i][p_j_in_D]) / 2
 			D[p_i][k] = temp
 			D[k][p_i] = temp
 
 		}
 	}
 
-	//delete row in D
-	D_new := append(D[:p_j], D[p_j+1:]...)
+	//delete row in both D and S
+	D_new := append(D[:p_j_in_D], D[p_j_in_D+1:]...)
 
 	//delete column in D
 	for i := 0; i < len(D_new); i++ {
-		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
+		D_new[i] = append(D_new[i][:p_j_in_D], D_new[i][p_j_in_D+1:]...)
 
 	}
-
-	//assign dead records -> -1
-	for k, v := range dead_records {
-		if v == p_i {
-			fmt.Println("also once per it")
-			dead_records[k] = -1
-		}
-		if v == p_j {
-			fmt.Println("once per it")
-			dead_records[k] = -1
-		}
-		if v > p_j {
-			dead_records[k] = v - 1
-		}
-	}
-	dead_records[len(dead_records)] = p_i
-	fmt.Println(dead_records)
-	fmt.Println(D_new)
 
 	//fix S
 	S_new := S
 
 	//overwrite the row p_i where we want to store merged ij
-	fmt.Println(p_i, p_j, len(D[p_i]))
-	fmt.Println("HAHA")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
-	}
 	for j := 0; j < len(D[p_i]); j++ {
 		var tuple Tuple
-		var result int
-
 		tuple.value = D[p_i][j]
-		for k, v := range dead_records {
-			if v == j {
-				result = k
-			}
-		}
-		tuple.index_j = result
+		tuple.index_j = len(dead_records)
 		S_new[p_i][j] = tuple
 
 	}
 	//cut excess data away
-	S_new[p_i] = S_new[p_i][:len(D_new)]
+	S_new[p_i] = S_new[p_i][:len(D)]
 
 	//sort merged row
 	sort.Slice(S_new[p_i], func(a, b int) bool {
 		return (S_new[p_i][a].value < S_new[p_i][b].value)
 	})
+	S_new = append(S[:p_j_in_D], S[p_j_in_D+1:]...)
+	fmt.Println("at append", p_j, len(S_new))
 
-	fmt.Println("asdhf")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
+	fmt.Println(S)
+	fmt.Println(dead_records)
+	fmt.Println("merging", p_i, p_j)
+	var p_i_in_dead_records int
+
+	//assign dead records -> -1
+
+	//check if the row of p_i has already been merged before
+
+	if dead_records[p_i] == -1 {
+		fmt.Println("p-i is 1 in dead records")
+		for k, v := range dead_records {
+			if v == p_i {
+				p_i_in_dead_records = k
+			}
+		}
+	} else {
+		p_i_in_dead_records = p_i
 	}
+	dead_records[len(dead_records)] = dead_records[p_i_in_dead_records]
 
-	//delete row in S
-	S_new = append(S[:p_j], S[p_j+1:]...)
+	dead_records[p_i_in_dead_records] = -1
+	dead_records[p_j] = -1
+	//add merged ij at i's spot
+	for k, v := range dead_records {
+		//if affected by index movement
+		if v > p_j {
+			//if record already dead we keep -1 as the 'nil' value
+			if dead_records[k] != -1 {
+				dead_records[k] = v - 1
+			}
+		}
+	}
+	print("0 ind a rcords ", p_i_in_dead_records, dead_records[1])
 
 	return D_new, S_new, dead_records
 }
