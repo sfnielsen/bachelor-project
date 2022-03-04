@@ -202,7 +202,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	emptyMatrix := make([][]float64, len(labels))
 	fmt.Println("###CREATE DISTANCE MATRIX")
 	for i := range distanceMatrix {
-		emptyMatrix[i] = make([]float64, len(labels))
+		emptyMatrix[i] = make([]float64, len(original_labels))
 	}
 	//fmt.Println("###PRINT ORIGINAL TREE")
 	//for _, bob := range original_tree {
