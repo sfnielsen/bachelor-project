@@ -185,7 +185,6 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	//we need this to make distance matrix rows, so every row is in same order of labels.
 	for i, v := range labels {
 		labelMap[v] = i
-		fmt.Println("bab", v)
 	}
 
 	for _, node := range tree {

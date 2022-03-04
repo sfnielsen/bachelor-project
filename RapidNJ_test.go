@@ -155,8 +155,34 @@ func TestMakeTree(t *testing.T) {
 	}
 }
 
+func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		_, labels, distanceMatrix := generateTree(5, 5)
+		original_labels := make([]string, len(labels))
+		copy(original_labels, labels)
+
+		original_dist_mat := make([][]float64, len(distanceMatrix))
+		for i := range distanceMatrix {
+			original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+			copy(original_dist_mat[i], distanceMatrix[i])
+		}
+
+		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+		_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		emptyMatrix := make([][]float64, len(labels))
+		for i := range distanceMatrix {
+			emptyMatrix[i] = make([]float64, len(labels))
+		}
+		resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
+		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
+		if !are_they_the_same {
+			t.Errorf("failure in run no: %d ", i)
+		}
+	}
+
+}
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(8, 20)
+	_, labels, distanceMatrix := generateTree(6, 5)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -168,29 +194,38 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 
 	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
 
+	fmt.Println("###DO NEIGHBOURJOIN")
 	_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 
 	fmt.Println(len(resulting_tree))
 
 	emptyMatrix := make([][]float64, len(labels))
+	fmt.Println("###CREATE DISTANCE MATRIX")
 	for i := range distanceMatrix {
 		emptyMatrix[i] = make([]float64, len(labels))
 	}
+	//fmt.Println("###PRINT ORIGINAL TREE")
+	//for _, bob := range original_tree {
+	//	for _, stinko := range bob.Edge_array {
+	//		fmt.Println("babaganush", bob.Name, stinko.Distance, stinko.Node.Name)
+	//
+	//	}
+	//}
 
-	fmt.Println("hello hello")
+	fmt.Println("##ORIGINAL MATRIX:")
 	for i := 0; i < len(original_dist_mat); i++ {
 		fmt.Println(original_dist_mat[i])
 	}
 
-	fmt.Println("???")
+	fmt.Println("###NOW CREATE DIST")
 	resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
 	for i := 0; i < len(resulting_distance_matrix); i++ {
 		fmt.Println(resulting_distance_matrix[i])
 	}
-	are_they_the_same := compareDistanceMatrixes(distanceMatrix, resulting_distance_matrix)
+	are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
 
 	if !are_they_the_same {
-		t.Errorf("failure :(")
+		t.Errorf(" failure :(")
 	}
 
 }
@@ -202,8 +237,10 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 //this is not used could perhaps be deleted
 
 func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
+
 	for i, row := range matrix1 {
 		for j := range row {
+			fmt.Println(matrix1[i][j], matrix2[i][j])
 			if matrix1[i][j] != matrix2[i][j] {
 				return false
 			}
