@@ -157,7 +157,7 @@ func TestMakeTree(t *testing.T) {
 
 func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(5, 5)
+		_, labels, distanceMatrix := generateTree(5, 15)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -175,8 +175,9 @@ func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
 		}
 		resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
 		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
+
 		if !are_they_the_same {
-			t.Errorf("failure in run no: %d ", i)
+			t.Errorf(" failure :(")
 		}
 	}
 

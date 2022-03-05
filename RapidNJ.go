@@ -273,6 +273,7 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 		if v > p_j {
 			dead_records[k] = v - 1
 		}
+
 	}
 	dead_records[len(dead_records)] = p_i
 	fmt.Println(dead_records)
