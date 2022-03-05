@@ -99,21 +99,17 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	for r, row := range S {
 		fmt.Println("hey", row, len(row))
 
-		for i, _ := range row {
-			if dead_records[r] == -1 {
+		for i, v := range row {
+			if dead_records[v.index_j] == -1 {
+				fmt.Println("column dead", r, v.index_j)
 				continue
 			}
 
 			if i == 0 {
-				fmt.Println("I==0 case")
+				fmt.Println("I==0 case", i, r)
 				continue
 			}
 			s := S[r][i]
-
-			if dead_records[s.index_j] == r {
-				continue
-			}
-
 			c_to_cD := dead_records[s.index_j]
 
 			//check if dead record
@@ -124,6 +120,11 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 			if s.value-u[r]-max_u > q_min {
 				break
 			}
+			//if c_to_cD == r {
+			//	fmt.Println("row = column but columns are changed cuz dead n stuff CASE", s.index_j, r)
+			//	continue
+			//}
+
 			if s.value-u[r]-u[c_to_cD] < q_min {
 				fmt.Println("found one")
 				cur_i = r
@@ -316,10 +317,7 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	fmt.Println("merging", p_i, p_j)
 	var p_i_in_dead_records int
 
-	//assign dead records -> -1
-
 	//check if the row of p_i has already been merged before
-
 	if dead_records[p_i] == -1 {
 		fmt.Println("p-i is 1 in dead records")
 		for k, v := range dead_records {
@@ -337,7 +335,7 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	//add merged ij at i's spot
 	for k, v := range dead_records {
 		//if affected by index movement
-		if v > p_j {
+		if v >= p_j {
 			//if record already dead we keep -1 as the 'nil' value
 			if dead_records[k] != -1 {
 				dead_records[k] = v - 1
