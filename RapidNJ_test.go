@@ -183,50 +183,46 @@ func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
 
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(6, 5)
-	original_labels := make([]string, len(labels))
-	copy(original_labels, labels)
+	for i := 0; i < 1; i++ {
+		_, labels, distanceMatrix := generateTree(200, 10)
+		original_labels := make([]string, len(labels))
+		copy(original_labels, labels)
 
-	original_dist_mat := make([][]float64, len(distanceMatrix))
-	for i := range distanceMatrix {
-		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
-		copy(original_dist_mat[i], distanceMatrix[i])
-	}
+		original_dist_mat := make([][]float64, len(distanceMatrix))
+		for i := range distanceMatrix {
+			original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+			copy(original_dist_mat[i], distanceMatrix[i])
+		}
 
-	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
 
-	fmt.Println("###DO NEIGHBOURJOIN")
-	_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		fmt.Println("###DO NEIGHBOURJOIN")
+		_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 
-	fmt.Println(len(resulting_tree))
+		fmt.Println(len(resulting_tree))
 
-	emptyMatrix := make([][]float64, len(labels))
-	fmt.Println("###CREATE DISTANCE MATRIX")
-	for i := range distanceMatrix {
-		emptyMatrix[i] = make([]float64, len(original_labels))
-	}
-	//fmt.Println("###PRINT ORIGINAL TREE")
-	//for _, bob := range original_tree {
-	//	for _, stinko := range bob.Edge_array {
-	//		fmt.Println("babaganush", bob.Name, stinko.Distance, stinko.Node.Name)
-	//
-	//	}
-	//}
+		emptyMatrix := make([][]float64, len(labels))
+		fmt.Println("###CREATE DISTANCE MATRIX")
+		for i := range distanceMatrix {
+			emptyMatrix[i] = make([]float64, len(original_labels))
+		}
 
-	fmt.Println("##ORIGINAL MATRIX:")
-	for i := 0; i < len(original_dist_mat); i++ {
-		fmt.Println(original_dist_mat[i])
-	}
+		fmt.Println("##ORIGINAL MATRIX:")
+		for i := 0; i < len(original_dist_mat); i++ {
+			fmt.Println(original_dist_mat[i])
+		}
 
-	fmt.Println("###NOW CREATE DIST")
-	resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
-	for i := 0; i < len(resulting_distance_matrix); i++ {
-		fmt.Println(resulting_distance_matrix[i])
-	}
-	are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
+		fmt.Println("###NOW CREATE DIST")
+		resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
+		for i := 0; i < len(resulting_distance_matrix); i++ {
+			fmt.Println(resulting_distance_matrix[i])
+		}
 
-	if !are_they_the_same {
-		t.Errorf(" failure :(")
+		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
+		time.Sleep(2000 * time.Millisecond)
+		if !are_they_the_same {
+			t.Errorf(" failure :(")
+		}
 	}
 
 }

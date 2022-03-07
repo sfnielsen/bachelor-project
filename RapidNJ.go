@@ -114,10 +114,11 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 				break
 			}
 			fmt.Println("some length should be the same; ", len(u), len(D), len(S))
-			if s.value-u[r]-u[c_to_cD] < q_min {
+			q := s.value - u[r] - u[c_to_cD]
+			if q < q_min {
 				cur_i = r
-				cur_j = dead_records[s.index_j]
-				q_min = s.value - u[r] - u[c_to_cD]
+				cur_j = c_to_cD
+				q_min = q
 				fmt.Println(q_min, "lautis")
 			}
 		}
@@ -159,6 +160,14 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//gets two indexes in D
 	cur_i, cur_j := rapidNeighborJoining(u, D, S, dead_records)
+
+	//make sure p_i is the smallest index.
+	//both important for labels and for creation of new distance matrix.
+	if cur_i > cur_j {
+		temp := cur_i
+		cur_i = cur_j
+		cur_j = temp
+	}
 
 	if NewickFlag {
 		//Distance to new point where they meet
@@ -229,12 +238,6 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 }
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
-	//make sure p_i is the smallest index
-	if p_i > p_j {
-		temp := p_i
-		p_i = p_j
-		p_j = temp
-	}
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
@@ -244,7 +247,7 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 			continue
 		} else {
 			//Overwrite p_i as merge ij
-			temp := (D[p_i][k] + D[p_j][k] - D[p_i][p_j]) / 2
+			temp := (D[p_i][k] + D[p_j][k] - D[p_i][p_j]) / 2.0
 			D[p_i][k] = temp
 			D[k][p_i] = temp
 
