@@ -184,7 +184,7 @@ func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(200, 10)
+		_, labels, distanceMatrix := generateTree(100, 10)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
