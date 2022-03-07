@@ -86,7 +86,7 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 
 			array[1].Name = "(" + array[0].Name + "," + array[1].Name[1:]
 
-			dist := rand.Intn(max_length_random) + 1
+			dist := float64(rand.Intn(max_length_random)) + 1.0
 
 			new_edge_0 := new(Edge)
 			new_edge_0.Distance = float64(dist)

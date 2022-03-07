@@ -5,3 +5,7 @@
 #some go related files
 *.mod
 *.sum
+
+#other
+newick.txt
+canonicalNJ/newick.txt
