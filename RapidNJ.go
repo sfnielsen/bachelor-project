@@ -68,7 +68,6 @@ func initSmatrix(D [][]float64) [][]Tuple {
 		sort.Slice(S[i], func(a, b int) bool {
 			return (S[i][a].value < S[i][b].value)
 		})
-		fmt.Println(S[i])
 	}
 	return S
 }
@@ -95,12 +94,10 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 	cur_i, cur_j := -1, -1
 
 	for r, row := range S {
-		fmt.Println("hey", row, len(row))
 
 		for c := range row {
 			s := S[r][c]
 			c_to_cD := dead_records[s.index_j]
-			fmt.Println(c, s.value, c_to_cD)
 			//check if dead record
 			if c_to_cD == -1 {
 				continue
@@ -110,16 +107,13 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 				continue
 			}
 			if s.value-u[r]-max_u > q_min {
-				fmt.Println("breaking")
 				break
 			}
-			fmt.Println("some length should be the same; ", len(u), len(D), len(S))
 			q := s.value - u[r] - u[c_to_cD]
 			if q < q_min {
 				cur_i = r
 				cur_j = c_to_cD
 				q_min = q
-				fmt.Println(q_min, "lautis")
 			}
 		}
 	}
@@ -144,12 +138,6 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	u := make([]float64, n)
 
-	print("D\n")
-	for i := 0; i < n; i++ {
-		fmt.Println(D[i])
-	}
-
-	print("\n")
 	for i, row := range D {
 		sum := 0.0
 		for j := range row {
@@ -174,8 +162,6 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
 		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
 		//convert to string
-		fmt.Println(v_iu)
-		fmt.Println(v_iu)
 
 		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
 		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
@@ -190,27 +176,16 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 
-		for i, v := range labels {
-			fmt.Println(i, v, "This is god")
-		}
 	}
 
 	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
-
-	fmt.Println("what is going")
-	for i := 0; i < len(labels); i++ {
-		fmt.Println(labels[i])
-	}
-	fmt.Println("okay nice")
 
 	//stop maybe
 	if len(D_new) > 2 {
 		return neighborJoin(D_new, S_new, labels, dead_records_new, array, treeBanana)
 	} else {
 		if NewickFlag {
-			fmt.Println(cur_i, cur_j)
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
-			fmt.Println(newick)
 
 			err := ioutil.WriteFile("newick.txt", []byte(newick), 0644)
 			if err != nil {
@@ -266,11 +241,9 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	//assign dead records -> -1
 	for k, v := range dead_records {
 		if v == p_i {
-			fmt.Println("also once per it")
 			dead_records[k] = -1
 		}
 		if v == p_j {
-			fmt.Println("once per it")
 			dead_records[k] = -1
 		}
 		if v > p_j {
@@ -279,18 +252,11 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 
 	}
 	dead_records[len(dead_records)] = p_i
-	fmt.Println(dead_records)
-	fmt.Println(D_new)
 
 	//fix S
 	S_new := S
 
 	//overwrite the row p_i where we want to store merged ij
-	fmt.Println(p_i, p_j, len(D[p_i]))
-	fmt.Println("HAHA")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
-	}
 	for j := 0; j < len(D[p_i]); j++ {
 		var tuple Tuple
 		var result int
@@ -312,11 +278,6 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	sort.Slice(S_new[p_i], func(a, b int) bool {
 		return (S_new[p_i][a].value < S_new[p_i][b].value)
 	})
-
-	fmt.Println("asdhf")
-	for i := 0; i < len(S_new); i++ {
-		fmt.Println(S_new[i])
-	}
 
 	//delete row in S
 	S_new = append(S[:p_j], S[p_j+1:]...)

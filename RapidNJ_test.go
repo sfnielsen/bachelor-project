@@ -151,13 +151,13 @@ func TestMakeTree(t *testing.T) {
 	a, b, c := generateTree(5, 3)
 
 	if a == nil || b == nil || c == nil {
-		t.Errorf("poops")
+		t.Errorf("not good")
 	}
 }
 
-func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
+func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(5, 15)
+		_, labels, distanceMatrix := generateTree(20, 15)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -184,7 +184,7 @@ func TestRapidNJ5TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(100, 10)
+		_, labels, distanceMatrix := generateTree(500, 1000)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -199,31 +199,33 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 		fmt.Println("###DO NEIGHBOURJOIN")
 		_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 
-		fmt.Println(len(resulting_tree))
-
 		emptyMatrix := make([][]float64, len(labels))
 		fmt.Println("###CREATE DISTANCE MATRIX")
 		for i := range distanceMatrix {
 			emptyMatrix[i] = make([]float64, len(original_labels))
 		}
 
-		fmt.Println("##ORIGINAL MATRIX:")
-		for i := 0; i < len(original_dist_mat); i++ {
-			fmt.Println(original_dist_mat[i])
-		}
+		fmt.Println("###ORIGINAL MATRIX")
+
+		//for i := 0; i < len(original_dist_mat); i++ {
+		//	fmt.Println(original_dist_mat[i])
+		//}
 
 		fmt.Println("###NOW CREATE DIST")
 		resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
-		for i := 0; i < len(resulting_distance_matrix); i++ {
-			fmt.Println(resulting_distance_matrix[i])
-		}
-
+		//for i := 0; i < len(resulting_distance_matrix); i++ {
+		//	fmt.Println(resulting_distance_matrix[i])
+		//}
+		fmt.Println("###COMPARE WITH ORIGINAL")
 		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
-		time.Sleep(2000 * time.Millisecond)
 		if !are_they_the_same {
 			t.Errorf(" failure :(")
 		}
 	}
+
+}
+
+func testRuntimeOfBigTaxas(t *testing.T) {
 
 }
 
@@ -237,29 +239,12 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
 	for i, row := range matrix1 {
 		for j := range row {
-			fmt.Println(matrix1[i][j], matrix2[i][j])
 			if matrix1[i][j] != matrix2[i][j] {
 				return false
 			}
 		}
 	}
 	return true
-}
-
-func transposeMatrix(matrix [][]float64) [][]float64 {
-	size := len(matrix)
-	transposed := make([][]float64, size)
-	for i := range transposed {
-		transposed[i] = make([]float64, size)
-	}
-
-	for i, rows := range matrix {
-		for j := range rows {
-			transposed[j][i] = matrix[i][j]
-		}
-
-	}
-	return transposed
 }
 
 //depth first searching on a tree of nodes starting at current_node. Note that -1 means that destionation was not found
@@ -310,24 +295,4 @@ func count_nodes(current_node *Node, marked map[*Node]bool) (total_nodes int) {
 		}
 	}
 	return sum
-}
-
-func compare_trees(tree1 Tree, tree2 Tree) bool {
-	var tree1_node *Node
-	for _, v := range tree1 {
-		//identify some actual taxa
-		if len(v.Edge_array) == 1 {
-			tree1_node = v
-			break
-		}
-	}
-
-	_, tree2_node := dfs_tree(tree2[0], tree1_node.Name, make(map[*Node]bool))
-
-	//printing so that compiler does not complain xD
-	fmt.Println(tree2_node)
-	//############################
-	//now the two identical taxa/tip nodes are found and we can start the proces of traversing the tree from this node and comparing.
-	//############################
-	return true
 }

@@ -12,3 +12,4 @@ TODO:
     The last nodes we connect ends up with a '2 edge node' which should be a '3 edge node' (still the case for newick)
 
     GenerateTree should do floats instead of ints.
+    canonicalNJ bør også implementere Tree systemet så den kan verificeres og bruges til at sammenligne kørselstid med RapidNJ
