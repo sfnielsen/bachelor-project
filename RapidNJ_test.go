@@ -225,15 +225,34 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 
 }
 
-func testRuntimeOfBigTaxas(t *testing.T) {
+func TestRuntimeOfBigTaxas(t *testing.T) {
+	//declaring some variables to hold times
+	var time_start, time_end int64
 
+	fmt.Println("###GENERATING DISTANCE MATRIX")
+	time_start = time.Now().UnixMilli()
+	_, labels, distanceMatrix := generateTree(1000, 1000)
+	time_end = time.Now().UnixMilli()
+	time_generateTree := time_end - time_start
+	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
+
+	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+
+	fmt.Println("###BEGIN NEIGHBOR-JOINING")
+	time_start = time.Now().UnixMilli()
+	neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+	time_end = time.Now().UnixMilli()
+	time_neighborJoin := int(time_end - time_start)
+	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
+
+	if 1 == 2 {
+		t.Errorf(" failure :(")
+	}
 }
 
 //#############################################
 //helper functions we use in the test framework
 //#############################################
-
-//this is not used could perhaps be deleted
 
 func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
