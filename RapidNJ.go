@@ -240,13 +240,14 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 
 	//assign dead records -> -1
 	for k, v := range dead_records {
+		if v == -1 {
+			continue
+		}
 		if v == p_i {
 			dead_records[k] = -1
-		}
-		if v == p_j {
+		} else if v == p_j {
 			dead_records[k] = -1
-		}
-		if v > p_j {
+		} else if v > p_j {
 			dead_records[k] = v - 1
 		}
 
