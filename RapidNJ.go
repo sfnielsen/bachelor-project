@@ -68,9 +68,9 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 
 		for c := range row {
 			s := S[r][c]
-			c_to_cD := dead_records[s.index_j]
+			c_to_cD, ok := dead_records[s.index_j]
 			//check if dead record
-			if c_to_cD == -1 {
+			if !ok {
 				continue
 			}
 			// case where i == j
@@ -149,7 +149,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 	}
 
-	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j)
+	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j, len(tree))
 
 	//stop maybe
 	if len(D_new) > 2 {
@@ -157,7 +157,6 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
-
 			err := ioutil.WriteFile("newick.txt", []byte(newick), 0644)
 			if err != nil {
 				panic(err)
@@ -183,7 +182,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 	return "error", tree //this case should not be possible
 }
 
-func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {
+func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int) {
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
@@ -206,24 +205,26 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	//delete column in D
 	for i := 0; i < len(D_new); i++ {
 		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
-
 	}
 
-	//assign dead records -> -1
+	//Overwrite dead records
 	for k, v := range dead_records {
-		if v == -1 {
+		if _, ok := dead_records[k]; !ok {
 			continue
 		}
 		if v == p_i {
-			dead_records[k] = -1
+			delete(dead_records, k)
 		} else if v == p_j {
-			dead_records[k] = -1
+			delete(dead_records, k)
 		} else if v > p_j {
 			dead_records[k] = v - 1
 		}
 
 	}
-	dead_records[len(dead_records)] = p_i
+	dead_records[new_map_key] = p_i
+
+	//allow quicker lookups
+	dead_records_reverse := reverseMap((dead_records))
 
 	//fix S
 	S_new := S
@@ -234,11 +235,8 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 		var result int
 
 		tuple.value = D[p_i][j]
-		for k, v := range dead_records {
-			if v == j {
-				result = k
-			}
-		}
+		result = dead_records_reverse[j]
+
 		tuple.index_j = result
 		S_new[p_i][j] = tuple
 
@@ -255,4 +253,12 @@ func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float6
 	S_new = append(S[:p_j], S[p_j+1:]...)
 
 	return D_new, S_new, dead_records
+}
+
+func reverseMap(m map[int]int) map[int]int {
+	n := make(map[int]int, len(m))
+	for k, v := range m {
+		n[v] = k
+	}
+	return n
 }

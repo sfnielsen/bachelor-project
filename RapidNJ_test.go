@@ -293,6 +293,62 @@ func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
 
 }
 
+func Test_Compare_runtimes_canonical_against_rapid(t *testing.T) {
+	var time_start, time_end int64
+	var time_measured int
+	NewickFlag = false
+
+	_, labels, distanceMatrix := generateTree(3000, 15)
+	original_labels := make([]string, len(labels))
+	copy(original_labels, labels)
+
+	original_dist_mat := make([][]float64, len(distanceMatrix))
+	for i := range distanceMatrix {
+		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+		copy(original_dist_mat[i], distanceMatrix[i])
+	}
+
+	_, _, array, tree := standardSetup(distanceMatrix, labels)
+
+	//run rapidJoin and measure the time
+	time_start = time.Now().UnixMilli()
+	fmt.Printf("###BEGINNING NJ###\n")
+	neighborJoin(distanceMatrix, labels, array, tree)
+	time_end = time.Now().UnixMilli()
+	time_measured = int(time_end - time_start)
+	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
+
+	emptyMatrix1 := make([][]float64, len(labels))
+	for i := range distanceMatrix {
+		emptyMatrix1[i] = make([]float64, len(labels))
+	}
+
+	labels_cpy := make([]string, len(original_labels))
+	copy(labels_cpy, original_labels)
+
+	dist_mat_cpy := make([][]float64, len(original_dist_mat))
+	for i := range original_dist_mat {
+		dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+		copy(dist_mat_cpy[i], original_dist_mat[i])
+	}
+
+	S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
+
+	//run rapidJoin and measure the time
+	time_start = time.Now().UnixMilli()
+	fmt.Printf("###BEGINNING RAPIDNJ###\n")
+	rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree)
+	time_end = time.Now().UnixMilli()
+	time_measured = int(time_end - time_start)
+	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
+
+	emptyMatrix2 := make([][]float64, len(labels_cpy))
+	for i := range dist_mat_cpy {
+		emptyMatrix2[i] = make([]float64, len(labels_cpy))
+	}
+
+}
+
 //#############################################
 //helper functions we use in the test framework
 //#############################################

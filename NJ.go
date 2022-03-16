@@ -76,7 +76,6 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
-			fmt.Println(newick)
 
 			err := ioutil.WriteFile("newick.txt", []byte(newick), 0644)
 			if err != nil {
