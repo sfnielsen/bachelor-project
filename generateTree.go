@@ -203,7 +203,3 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	}
 	return distanceMatrix
 }
-
-func sortTree() {
-
-}

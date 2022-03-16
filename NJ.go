@@ -39,11 +39,6 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 	}
 	u := make([]float64, n)
 
-	print("D\n")
-	for i := 0; i < n; i++ {
-		fmt.Println(D[i])
-	}
-	print("\n")
 	for i, row := range Q {
 		sum := 0.0
 		for j := range row {
@@ -59,9 +54,6 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 		v_iu := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_i]-u[cur_j])/2)
 		v_ju := fmt.Sprintf("%f", D[cur_i][cur_j]/2+(u[cur_j]-u[cur_i])/2)
 		//convert to string
-		fmt.Println(v_iu)
-		fmt.Println(v_iu)
-
 		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
 		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
 
@@ -78,16 +70,11 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 
 	D_new := createNewDistanceMatrixNJ(D, cur_i, cur_j)
 
-	for i := 0; i < len(labels); i++ {
-		fmt.Println(labels[i])
-	}
-
 	//stop maybe
 	if len(D_new) > 2 {
 		neighborJoin(D_new, labels, array, tree)
 	} else {
 		if NewickFlag {
-			fmt.Println(cur_i, cur_j)
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
 			fmt.Println(newick)
 

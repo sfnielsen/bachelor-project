@@ -10,35 +10,6 @@ import (
 
 var NewickFlag bool = true
 
-func main() {
-	labels := []string{
-		"A", "B", "C", "D",
-	}
-	D := [][]float64{
-		{0, 17, 21, 27},
-		{17, 0, 12, 18},
-		{21, 12, 0, 14},
-		{27, 18, 14, 0},
-	}
-
-	S := initSmatrix(D)
-	dead_records := initDeadRecords(D)
-
-	var treeBanana Tree
-	var array Tree
-	if NewickFlag {
-		array = generateTreeForRapidNJ(labels)
-		for _, node := range array {
-			treeBanana = append(treeBanana, node)
-		}
-	} else {
-		array = make(Tree, 0)
-	}
-
-	newick_result, _ := rapidJoin(D, S, labels, dead_records, array, treeBanana)
-	fmt.Println(newick_result)
-}
-
 //function to initialize dead records
 func initDeadRecords(D [][]float64) map[int]int {
 	dead_records := make(map[int]int)
@@ -132,7 +103,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
-func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, treeBanana Tree) (string, Tree) {
+func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree) (string, Tree) {
 
 	n := len(D)
 
@@ -168,7 +139,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 		newNode := integrateNewNode(array[cur_i], array[cur_j], distance_to_x, distance_to_y)
 		array[cur_i] = newNode
-		treeBanana = append(treeBanana, newNode)
+		tree = append(tree, newNode)
 
 		array = append(array[:cur_j], array[cur_j+1:]...)
 
@@ -182,7 +153,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoin(D_new, S_new, labels, dead_records_new, array, treeBanana)
+		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
@@ -205,11 +176,11 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 			array = remove(array, 0)
 
-			return newick, treeBanana
+			return newick, tree
 
 		}
 	}
-	return "error", treeBanana //this case should not be possible
+	return "error", tree //this case should not be possible
 }
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int) ([][]float64, [][]Tuple, map[int]int) {

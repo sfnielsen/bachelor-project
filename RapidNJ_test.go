@@ -12,12 +12,12 @@ func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
 	var treeBanana Tree
-	var array Tree
-	array = generateTreeForRapidNJ(labels)
+	var array Tree = generateTreeForRapidNJ(labels)
 
 	for _, node := range array {
 		treeBanana = append(treeBanana, node)
 	}
+
 	return S, deadRecords, array, treeBanana
 }
 func Test4Taxa(t *testing.T) {
