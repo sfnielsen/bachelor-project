@@ -4,22 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"strconv"
 )
-
-var NewickFlag bool = true
-
-func main() {
-	D := [][]float64{
-		{0, 17, 21, 27},
-		{17, 0, 12, 18},
-		{21, 12, 0, 14},
-		{27, 18, 14, 0},
-	}
-	labels := []string{
-		"A", "B", "C", "D",
-	}
-	neighborJoin(D, labels)
-}
 
 func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) (int, int) {
 	cur_val := math.MaxFloat64
@@ -45,26 +31,7 @@ func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) 
 
 }
 
-type Tuple struct {
-	value   float64
-	index_j int
-}
-
-func rapidNeighborJoining(Q [][]float64, u []float64, D [][]float64, n int) {
-	S := Q
-	for i := 0; i < n; i++ {
-		for j := 0; j < n; j++ {
-			tuple := new(Tuple)
-			tuple.value = Q[i][j]
-			tuple.index_j = j
-		}
-	}
-	for i := range Q {
-		S[i] = make([]float64, n)
-	}
-}
-
-func neighborJoin(D [][]float64, labels []string) {
+func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string, Tree) {
 	n := len(D)
 	Q := make([][]float64, n)
 	for i := range Q {
@@ -95,12 +62,21 @@ func neighborJoin(D [][]float64, labels []string) {
 		fmt.Println(v_iu)
 		fmt.Println(v_iu)
 
+		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
+		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
+
+		newNode := integrateNewNode(array[cur_i], array[cur_j], distance_to_x, distance_to_y)
+		array[cur_i] = newNode
+		tree = append(tree, newNode)
+
+		array = append(array[:cur_j], array[cur_j+1:]...)
+
 		//creating newick form
 		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 	}
 
-	D_new := createNewDistanceMatrix(D, cur_i, cur_j)
+	D_new := createNewDistanceMatrixNJ(D, cur_i, cur_j)
 
 	for i := 0; i < len(labels); i++ {
 		fmt.Println(labels[i])
@@ -108,7 +84,7 @@ func neighborJoin(D [][]float64, labels []string) {
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, labels)
+		neighborJoin(D_new, labels, array, tree)
 	} else {
 		if NewickFlag {
 			fmt.Println(cur_i, cur_j)
@@ -120,13 +96,26 @@ func neighborJoin(D [][]float64, labels []string) {
 				panic(err)
 			}
 
-		}
-		return
-	}
+			new_edge_0 := new(Edge)
+			new_edge_0.Distance = D_new[0][1]
+			new_edge_0.Node = array[1]
 
+			new_edge_1 := new(Edge)
+			new_edge_1.Distance = D_new[0][1]
+			new_edge_1.Node = array[0]
+
+			array[0].Edge_array = append(array[0].Edge_array, new_edge_0)
+			array[1].Edge_array = append(array[1].Edge_array, new_edge_1)
+
+			array = remove(array, 0)
+
+			return newick, tree
+		}
+	}
+	return "error", tree
 }
 
-func createNewDistanceMatrix(D [][]float64, p_i int, p_j int) [][]float64 {
+func createNewDistanceMatrixNJ(D [][]float64, p_i int, p_j int) [][]float64 {
 
 	for k := 0; k < len(D); k++ {
 		if p_i == k {

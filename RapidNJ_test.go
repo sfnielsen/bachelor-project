@@ -32,7 +32,7 @@ func Test4Taxa(t *testing.T) {
 	}
 	S, deadRecords, array, treeBanana := standardSetup(D, labels)
 
-	newick_result, _ := neighborJoin(D, S, labels, deadRecords, array, treeBanana)
+	newick_result, _ := rapidJoin(D, S, labels, deadRecords, array, treeBanana)
 	print()
 
 	//note that the newick always becomes a rooted tree whereas our implementation of the algorithm generates an unrooted tree.
@@ -128,7 +128,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 		}
 
 		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-		_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 		emptyMatrix := make([][]float64, len(labels))
 		for i := range distanceMatrix {
 			emptyMatrix[i] = make([]float64, len(labels))
@@ -157,7 +157,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
 
 		fmt.Println("###DO NEIGHBOURJOIN")
-		_, resulting_tree := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 
 		emptyMatrix := make([][]float64, len(labels))
 		fmt.Println("###CREATE DISTANCE MATRIX")
@@ -200,7 +200,7 @@ func TestRuntimeOfBigTaxas(t *testing.T) {
 
 	fmt.Println("###BEGIN NEIGHBOR-JOINING")
 	time_start = time.Now().UnixMilli()
-	a, b := neighborJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+	a, b := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
 	time_end = time.Now().UnixMilli()
 	time_neighborJoin := int(time_end - time_start)
 	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
@@ -208,6 +208,89 @@ func TestRuntimeOfBigTaxas(t *testing.T) {
 	if a == "" || b == nil {
 		t.Errorf(" failure :(")
 	}
+}
+
+func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		_, labels, distanceMatrix := generateTree(20, 15)
+		original_labels := make([]string, len(labels))
+		copy(original_labels, labels)
+
+		original_dist_mat := make([][]float64, len(distanceMatrix))
+		for i := range distanceMatrix {
+			original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+			copy(original_dist_mat[i], distanceMatrix[i])
+		}
+
+		_, _, array, tree := standardSetup(distanceMatrix, labels)
+		_, resulting_tree := neighborJoin(distanceMatrix, labels, array, tree)
+		emptyMatrix := make([][]float64, len(labels))
+		for i := range distanceMatrix {
+			emptyMatrix[i] = make([]float64, len(labels))
+		}
+
+		resulting_distance_matrix := createDistanceMatrix(emptyMatrix, resulting_tree, original_labels)
+		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
+
+		if !are_they_the_same {
+			t.Errorf(" failure :(")
+		}
+	}
+}
+
+func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
+	_, labels, distanceMatrix := generateTree(100, 15)
+	original_labels := make([]string, len(labels))
+	copy(original_labels, labels)
+
+	original_dist_mat := make([][]float64, len(distanceMatrix))
+	for i := range distanceMatrix {
+		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+		copy(original_dist_mat[i], distanceMatrix[i])
+	}
+
+	_, _, array, tree := standardSetup(distanceMatrix, labels)
+	_, canon_tree := neighborJoin(distanceMatrix, labels, array, tree)
+	emptyMatrix1 := make([][]float64, len(labels))
+	for i := range distanceMatrix {
+		emptyMatrix1[i] = make([]float64, len(labels))
+	}
+
+	resulting_canonical_matrix := createDistanceMatrix(emptyMatrix1, canon_tree, original_labels)
+
+	labels_cpy := make([]string, len(original_labels))
+	copy(labels_cpy, original_labels)
+
+	dist_mat_cpy := make([][]float64, len(original_dist_mat))
+	for i := range original_dist_mat {
+		dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+		copy(dist_mat_cpy[i], original_dist_mat[i])
+	}
+
+	S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
+	_, rapid_tree := rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree)
+	emptyMatrix2 := make([][]float64, len(labels_cpy))
+	for i := range dist_mat_cpy {
+		emptyMatrix2[i] = make([]float64, len(labels_cpy))
+	}
+
+	resulting_rapid_matrix := createDistanceMatrix(emptyMatrix2, rapid_tree, original_labels)
+
+	cmp_canon_original := compareDistanceMatrixes(original_dist_mat, resulting_canonical_matrix)
+	cmp_rapid_original := compareDistanceMatrixes(original_dist_mat, resulting_rapid_matrix)
+
+	if !(cmp_canon_original) {
+		t.Errorf(" canon != origninal")
+	}
+	if !(cmp_rapid_original) {
+		t.Errorf(" rapid != original")
+	}
+	cmp_canon_rapid := compareDistanceMatrixes(resulting_canonical_matrix, resulting_rapid_matrix)
+	//this case should not be possible of passed the two other comparisons
+	if !(cmp_canon_rapid) {
+		t.Errorf("canon != rapid")
+	}
+
 }
 
 //#############################################

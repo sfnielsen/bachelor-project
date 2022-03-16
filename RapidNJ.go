@@ -35,7 +35,7 @@ func main() {
 		array = make(Tree, 0)
 	}
 
-	newick_result, _ := neighborJoin(D, S, labels, dead_records, array, treeBanana)
+	newick_result, _ := rapidJoin(D, S, labels, dead_records, array, treeBanana)
 	fmt.Println(newick_result)
 }
 
@@ -132,7 +132,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
-func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, treeBanana Tree) (string, Tree) {
+func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, treeBanana Tree) (string, Tree) {
 
 	n := len(D)
 
@@ -182,7 +182,7 @@ func neighborJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return neighborJoin(D_new, S_new, labels, dead_records_new, array, treeBanana)
+		return rapidJoin(D_new, S_new, labels, dead_records_new, array, treeBanana)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
