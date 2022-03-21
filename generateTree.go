@@ -225,3 +225,27 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 	}
 	return distanceMatrix
 }
+
+func noOfEdgesToClosestTip(node *Node, seen map[string]bool) int {
+	//check if seen before. Return if seen or update map if not seen
+	if _, ok := seen[node.Name]; ok {
+		return math.MaxInt64
+	}
+	seen[node.Name] = true
+
+	//if current node is a tip we return distance 0
+	if len(node.Edge_array) == 1 {
+		return 0
+	}
+
+	//dive a level deeper to see if tip is one of the neighbors
+	best := math.MaxInt64
+	for _, edge := range node.Edge_array {
+		current := noOfEdgesToClosestTip(edge.Node, seen)
+		if current < best {
+			best = current
+		}
+	}
+	//add 1 to account for traversed edge
+	return (1 + best)
+}

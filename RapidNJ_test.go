@@ -14,8 +14,8 @@ import (
 
 const (
 	Shifting_Normal_Distribution string = "Sh_norm"
-	Normal_distribution                 = "Norm"
-	Uniform_distribution                = "Uniform"
+	Normal_distribution          string = "Norm"
+	Uniform_distribution         string = "Uniform"
 )
 
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
