@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -27,7 +29,7 @@ func remove(slice []*Node, s int) []*Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func generateTree(size int, max_length_random int) (Tree, []string, [][]float64) {
+func generateTree(size int, max_length_random int, distance_generator string) (Tree, []string, [][]float64) {
 	array := generateArray(size)
 	tree := make(Tree, 0)
 
@@ -46,10 +48,9 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 		tree = append(tree, value)
 	}
 
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	for len(array) > 1 {
-
-		rand.Seed(time.Now().UnixNano())
-
 		random_x := rand.Intn(len(array))
 		random_y := random_x
 
@@ -69,8 +70,32 @@ func generateTree(size int, max_length_random int) (Tree, []string, [][]float64)
 			array = remove(array, random_y)
 		}
 
-		distance_to_x := float64(rand.Intn(max_length_random) + 1)
-		distance_to_y := float64(rand.Intn(max_length_random) + 1)
+		//0.2 == std deviation,        1.0 == mean
+		//divider med 100 for at få 2 decimaler på floats
+		distance_to_x := 0.0
+		distance_to_y := 0.0
+		if distance_generator == "Sh_norm" {
+			if len(element_x.Edge_array) == 0 || len(element_y.Edge_array) == 0 {
+				distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+			} else {
+				distance_to_x = math.Floor(((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+			}
+		}
+
+		if distance_generator == "Norm" {
+			distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+			distance_to_y = math.Floor(float64((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+		}
+
+		if distance_generator == "Uniform" {
+			distance_to_x = float64(rand.Intn(max_length_random))
+			distance_to_y = float64(rand.Intn(max_length_random))
+
+		}
+
+		fmt.Println(distance_to_x, distance_to_y)
 
 		var new_node *Node = integrateNewNode(element_x, element_y, distance_to_x, distance_to_y)
 

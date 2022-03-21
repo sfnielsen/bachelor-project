@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+const ( 
+	Shifting_Normal_Distribution string = "Sh_norm"
+	Normal_distribution  = "Norm"
+	Uniform_distribution = "Uniform"
+)
+
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
@@ -53,7 +59,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 
 		taxa_amount := int(math.Pow(2, float64(i))) // power of 2
 		time_start := time.Now().UnixMilli()
-		generateTree(taxa_amount, 1)
+		generateTree(taxa_amount, 1, Normal_distribution)
 		time_end := time.Now().UnixMilli()
 		time := time_end - time_start
 
@@ -68,7 +74,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := generateTree(taxa_amount, 10)
+	tree, _, array := generateTree(taxa_amount, 10, Normal_distribution)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
@@ -112,7 +118,7 @@ func Test_Generated_Tree(t *testing.T) {
 }
 
 func TestMakeTree(t *testing.T) {
-	a, b, c := generateTree(5, 3)
+	a, b, c := generateTree(5, 3, Uniform_distribution)
 
 	if a == nil || b == nil || c == nil {
 		t.Errorf("not good")
@@ -121,7 +127,7 @@ func TestMakeTree(t *testing.T) {
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(20, 15)
+		_, labels, distanceMatrix := generateTree(20, 15, Uniform_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -148,7 +154,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(500, 1000)
+		_, labels, distanceMatrix := generateTree(500, 1000, Uniform_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -195,7 +201,7 @@ func TestRuntimeOfBigTaxas(t *testing.T) {
 
 	fmt.Println("###GENERATING DISTANCE MATRIX")
 	time_start = time.Now().UnixMilli()
-	_, labels, distanceMatrix := generateTree(1000, 1000)
+	_, labels, distanceMatrix := generateTree(1000, 1000, Normal_distribution)
 	time_end = time.Now().UnixMilli()
 	time_generateTree := time_end - time_start
 	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
@@ -216,7 +222,7 @@ func TestRuntimeOfBigTaxas(t *testing.T) {
 
 func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(20, 15)
+		_, labels, distanceMatrix := generateTree(20, 15 ,Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -243,7 +249,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(100, 15)
+	_, labels, distanceMatrix := generateTree(100, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -302,7 +308,7 @@ func Test_Compare_runtimes_canonical_against_rapid(t *testing.T) {
 	var time_measured int
 	NewickFlag = false
 
-	_, labels, distanceMatrix := generateTree(1000, 15)
+	_, labels, distanceMatrix := generateTree(1000, 15, Shifting_Normal_Distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -364,7 +370,7 @@ func Test_Make_Time_Taxa_CSV(t *testing.T) {
 		NewickFlag = false
 		fmt.Println()
 		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
-		_, labels, distanceMatrix := generateTree(i*taxavalue, 15)
+		_, labels, distanceMatrix := generateTree(i*taxavalue, 15, Shifting_Normal_Distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -422,7 +428,10 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
 	for i, row := range matrix1 {
 		for j := range row {
-			if matrix1[i][j] != matrix2[i][j] {
+			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 1 {
+
+				fmt.Println("first", matrix1[i][j])
+				fmt.Println("second", matrix2[i][j])
 				return false
 			}
 		}

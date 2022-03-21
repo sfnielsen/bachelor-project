@@ -103,6 +103,8 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
+
+
 func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree) (string, Tree) {
 
 	n := len(D)
