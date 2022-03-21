@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 ax = plt.gca()
 
 df = pd.read_csv('time_plot.csv')
-
-df.plot(kind='line',x='taxa',y='rapidnj',ax=ax)
-df.plot(kind='line',x='taxa',y='canonical', color='red', ax=ax)
+print(df)
+df.plot(kind='line',x='taxa',y='rapidnj_shifted',ax=ax)
+df.plot(kind='line',x='taxa',y='canonical_shifted', color='red',ax=ax)
+df.plot(kind='line',x='taxa',y='rapid_norm', color='green', ax=ax)
 
 plt.show()

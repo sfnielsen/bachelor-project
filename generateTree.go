@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -94,8 +93,6 @@ func generateTree(size int, max_length_random int, distance_generator string) (T
 			distance_to_y = float64(rand.Intn(max_length_random))
 
 		}
-
-		fmt.Println(distance_to_x, distance_to_y)
 
 		var new_node *Node = integrateNewNode(element_x, element_y, distance_to_x, distance_to_y)
 

@@ -12,10 +12,10 @@ import (
 	"time"
 )
 
-const ( 
+const (
 	Shifting_Normal_Distribution string = "Sh_norm"
-	Normal_distribution  = "Norm"
-	Uniform_distribution = "Uniform"
+	Normal_distribution                 = "Norm"
+	Uniform_distribution                = "Uniform"
 )
 
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
@@ -222,7 +222,7 @@ func TestRuntimeOfBigTaxas(t *testing.T) {
 
 func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(20, 15 ,Normal_distribution)
+		_, labels, distanceMatrix := generateTree(20, 15, Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -362,18 +362,19 @@ func Test_Make_Time_Taxa_CSV(t *testing.T) {
 	}
 	csvWriter := csv.NewWriter(csvFile)
 
-	label := []string{"taxa", "rapidnj", "canonical"}
+	label := []string{"taxa", "rapidnj_shifted", "canonical_shifted", "canonical_norm", "rapid_norm"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 31; i++ {
+	for i := 1; i < 15; i++ {
 		var time_start, time_end int64
 		NewickFlag = false
 		fmt.Println()
 		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+
+		//make first tree
 		_, labels, distanceMatrix := generateTree(i*taxavalue, 15, Shifting_Normal_Distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
-
 		original_dist_mat := make([][]float64, len(distanceMatrix))
 		for i := range distanceMatrix {
 			original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
@@ -382,7 +383,20 @@ func Test_Make_Time_Taxa_CSV(t *testing.T) {
 
 		_, _, array, tree := standardSetup(distanceMatrix, labels)
 
-		//run rapidJoin and measure the time
+		//make second tree tree
+		_, labels2, distanceMatrixUni := generateTree(i*taxavalue, 15, Normal_distribution)
+		original_labels2 := make([]string, len(labels2))
+		copy(original_labels2, labels2)
+
+		original_dist_mat2 := make([][]float64, len(distanceMatrixUni))
+		for i := range distanceMatrixUni {
+			original_dist_mat2[i] = make([]float64, len(distanceMatrixUni[i]))
+			copy(original_dist_mat2[i], distanceMatrixUni[i])
+		}
+
+		_, _, array2, tree2 := standardSetup(distanceMatrixUni, labels2)
+
+		//run CANONICAL and measure the time on Shifting Norm distance matrix
 		time_start = time.Now().UnixMilli()
 		fmt.Printf("###BEGINNING NJ###\n")
 		neighborJoin(distanceMatrix, labels, array, tree)
@@ -406,14 +420,44 @@ func Test_Make_Time_Taxa_CSV(t *testing.T) {
 
 		S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
 
-		//run rapidJoin and measure the time
+		//run rapidJoin and measure the time on Shifting norm
 		time_start = time.Now().UnixMilli()
 		fmt.Printf("###BEGINNING RAPIDNJ###\n")
 		rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree)
 		time_end = time.Now().UnixMilli()
 		time_measured_rapid := int(time_end - time_start)
 		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
-		row := []string{strconv.Itoa(i * taxavalue), strconv.Itoa(time_measured_rapid), strconv.Itoa(time_measured_nj)}
+
+		/// #######################  NEW MATRIX CODE STARTING ####################################
+		//run canonical and measure the time on standard norm
+		time_start = time.Now().UnixMilli()
+		fmt.Printf("###BEGINNING NJ###\n")
+		neighborJoin(distanceMatrixUni, labels2, array2, tree2)
+		time_end = time.Now().UnixMilli()
+		time_measured_nj_second := int(time_end - time_start)
+		fmt.Printf("### TIME ELAPSED NORMAL DIST: %d ms\n", time_measured_nj_second)
+
+		labels_cpy_2 := make([]string, len(original_labels2))
+		copy(labels_cpy_2, original_labels2)
+
+		dist_mat_cpy_2 := make([][]float64, len(original_dist_mat2))
+		for i := range original_dist_mat2 {
+			dist_mat_cpy_2[i] = make([]float64, len(original_dist_mat2[i]))
+			copy(dist_mat_cpy_2[i], original_dist_mat2[i])
+		}
+
+		S, dead_record, array, tree = standardSetup(original_dist_mat2, labels_cpy_2)
+
+		//run rapidJoin and measure the time on standard norm distribution
+		time_start = time.Now().UnixMilli()
+		fmt.Printf("###BEGINNING RAPIDNJ###\n")
+		rapidJoin(dist_mat_cpy_2, S, labels_cpy_2, dead_record, array, tree)
+		time_end = time.Now().UnixMilli()
+		time_measured_rapid_second := int(time_end - time_start)
+		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid_second)
+
+		row := []string{strconv.Itoa(i * taxavalue), strconv.Itoa(time_measured_rapid), strconv.Itoa(time_measured_nj),
+			strconv.Itoa(time_measured_nj_second), strconv.Itoa(time_measured_rapid_second)}
 		_ = csvWriter.Write(row)
 	}
 	csvWriter.Flush()
