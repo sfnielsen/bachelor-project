@@ -82,6 +82,24 @@ func generateTree(size int, max_length_random int, distance_generator string) (T
 				distance_to_y = math.Floor(float64((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
 			}
 		}
+		if distance_generator == "Cluster_norm" {
+			if noOfEdgesToClosestTip(element_x, make(map[string]bool)) < 3 || noOfEdgesToClosestTip(element_y, make(map[string]bool)) < 3 {
+				distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+			} else {
+				distance_to_x = math.Floor(((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+			}
+		}
+		if distance_generator == "Spike_norm" {
+			if noOfEdgesToClosestTip(element_x, make(map[string]bool)) > 2 || noOfEdgesToClosestTip(element_y, make(map[string]bool)) > 2 {
+				distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
+			} else {
+				distance_to_x = math.Floor(((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+				distance_to_y = math.Floor(float64((rand.NormFloat64()*20)+100.0)*float64(max_length_random)*100) / 100
+			}
+		}
 
 		if distance_generator == "Norm" {
 			distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
@@ -224,4 +242,28 @@ func createDistanceMatrix(distanceMatrix [][]float64, tree Tree, labels []string
 		}
 	}
 	return distanceMatrix
+}
+
+func noOfEdgesToClosestTip(node *Node, seen map[string]bool) int {
+	//check if seen before. Return if seen or update map if not seen
+	if _, ok := seen[node.Name]; ok {
+		return math.MaxInt64
+	}
+	seen[node.Name] = true
+
+	//if current node is a tip we return distance 0
+	if len(node.Edge_array) == 1 || len(node.Edge_array) == 0 {
+		return 0
+	}
+
+	//dive a level deeper to see if tip is one of the neighbors
+	best := math.MaxInt64
+	for _, edge := range node.Edge_array {
+		current := noOfEdgesToClosestTip(edge.Node, seen)
+		if current < best {
+			best = current
+		}
+	}
+	//add 1 to account for traversed edge
+	return (1 + best)
 }

@@ -14,8 +14,10 @@ import (
 
 const (
 	Shifting_Normal_Distribution string = "Sh_norm"
-	Normal_distribution                 = "Norm"
-	Uniform_distribution                = "Uniform"
+	Normal_distribution          string = "Norm"
+	Uniform_distribution         string = "Uniform"
+	Cluster_Normal_Distribution  string = "Cluster_norm"
+	Spike_Normal_distribution    string = "Spike_norm"
 )
 
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
@@ -154,7 +156,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(500, 1000, Uniform_distribution)
+		_, labels, distanceMatrix := generateTree(700, 100, Cluster_Normal_Distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
