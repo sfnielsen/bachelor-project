@@ -76,7 +76,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := generateTree(taxa_amount, 10, Normal_distribution)
+	tree, _, array := generateTree(taxa_amount, 5, Normal_distribution)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
@@ -84,7 +84,9 @@ func Test_Generated_Tree(t *testing.T) {
 			if i == j && array[i][j] != 0 {
 				t.Errorf("diagonal not 0")
 			}
-			if array[i][j] != array[j][i] {
+			//account for float pointer precision 2 decimals
+			round_idx1, round_idx2 := math.Round(array[i][j]*100)/100, math.Round(array[j][i]*100)/100
+			if round_idx1 != round_idx2 {
 				t.Errorf("transpose not same as original")
 			}
 		}
@@ -103,7 +105,12 @@ func Test_Generated_Tree(t *testing.T) {
 
 		distance, _ := dfs_tree(node_from, node_to_name, make(map[*Node]bool))
 
-		if distance != array[idx_start][idx_to] {
+		//account for float pointer precision 2 decimals
+		round_dist, round_exp_dist := math.Round(distance*100/100), math.Round(array[idx_start][idx_to])
+		if round_dist != round_exp_dist {
+			fmt.Println(idx_start, idx_to)
+			fmt.Println(distance, array[idx_start][idx_to])
+
 			t.Errorf("Distance should be the same. ")
 		}
 	}
@@ -156,7 +163,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(700, 100, Cluster_Normal_Distribution)
+		_, labels, distanceMatrix := generateTree(500, 100, Spike_Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
