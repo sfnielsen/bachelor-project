@@ -23,14 +23,12 @@ const (
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
-	var treeBanana Tree
-	var array Tree = generateTreeForRapidNJ(labels)
+	var tree Tree
+	var label_tree Tree = generateTreeForRapidNJ(labels)
 
-	for _, node := range array {
-		treeBanana = append(treeBanana, node)
-	}
+	tree = append(tree, label_tree...)
 
-	return S, deadRecords, array, treeBanana
+	return S, deadRecords, label_tree, tree
 }
 func Test4Taxa(t *testing.T) {
 	labels := []string{
@@ -163,7 +161,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(500, 100, Spike_Normal_distribution)
+		_, labels, distanceMatrix := generateTree(100, 100, Spike_Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -173,10 +171,10 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+		S, dead_record, array, tree := standardSetup(distanceMatrix, labels)
 
 		fmt.Println("###DO NEIGHBOURJOIN")
-		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, tree)
 
 		emptyMatrix := make([][]float64, len(labels))
 		fmt.Println("###CREATE DISTANCE MATRIX")
@@ -257,7 +255,44 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	}
 }
 
-func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
+func Test_Split_Distance(t *testing.T) {
+	iterations := 500
+	results := make(map[int]float64)
+	for i := 0; i < iterations; i++ {
+
+		//GENERATE 2 TREES
+		tree1, _, _ := generateTree(5, 15, Normal_distribution)
+		tree2, _, _ := generateTree(5, 15, Normal_distribution)
+
+		//CHECK TREES
+		results[Split_Distance(tree1[0], tree2[2])]++
+	}
+
+	for k, v := range results {
+		results[k] = float64(v) / float64(iterations)
+	}
+
+	//WE EXPECT 1/15 OF RANDOM 5-tip TREES TO BE TOPOLOGICALLY IDENTICAL
+	test := math.Abs(results[0] - float64(1)/float64(15))
+	if test > 0.025 {
+		t.Errorf("Expect 1/15 good trees, %f", test)
+	}
+
+	//CHECK THAT BIGGER TREES DO NOT RANDOMLY MAKE THE SAME TREE
+	for i := 0; i < (iterations / 5); i++ {
+
+		//GENERATE 2 TREES
+		tree1, _, _ := generateTree(20, 15, Normal_distribution)
+		tree2, _, _ := generateTree(20, 15, Normal_distribution)
+
+		//CHECK TREES
+		result := Split_Distance(tree1[0], tree2[2])
+		if result == 0 {
+			t.Errorf("Unlikely scenario - Big trees not expected to randomly be identical")
+		}
+	}
+}
+func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
 	_, labels, distanceMatrix := generateTree(100, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
@@ -308,6 +343,10 @@ func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
 	//this case should not be possible of passed the two other comparisons
 	if !(cmp_canon_rapid) {
 		t.Errorf("canon != rapid")
+	}
+
+	if Split_Distance(canon_tree[0], rapid_tree[0]) != 0 {
+		t.Errorf("rapid and canonical tree are not the same")
 	}
 
 }
@@ -481,7 +520,7 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
 	for i, row := range matrix1 {
 		for j := range row {
-			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 1 {
+			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 0.1 {
 
 				fmt.Println("first", matrix1[i][j])
 				fmt.Println("second", matrix2[i][j])
@@ -490,37 +529,6 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 		}
 	}
 	return true
-}
-
-//depth first searching on a tree of nodes starting at current_node. Note that -1 means that destionation was not found
-func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool) (float64, *Node) {
-	marked[current_node] = true
-	distance := .0
-
-	if current_node.Name == destination_name {
-		return distance, current_node
-	}
-	for _, edge := range current_node.Edge_array {
-		if _, ok := marked[edge.Node]; ok {
-			continue
-		}
-		//check if we are looking at a leaf
-		if len(edge.Node.Edge_array) == 1 {
-			//check if leaf is the desired destionation
-			if edge.Node.Name == destination_name {
-				distance += edge.Distance
-				return distance, current_node
-			}
-
-		} else {
-			value, node := dfs_tree(edge.Node, destination_name, marked)
-			if node != nil {
-				distance = value + edge.Distance
-				return distance, node
-			}
-		}
-	}
-	return -1, nil
 }
 
 //should take a node and traverse the tree the node is connected to. Returning the total amount of nodes in the tree. This should be 2*taxa-2

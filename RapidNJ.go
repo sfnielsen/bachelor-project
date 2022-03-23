@@ -103,8 +103,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
-
-
+//two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree) (string, Tree) {
 
 	n := len(D)
