@@ -357,6 +357,29 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 
 }
 
+func Test_Split_Distance_fails(t *testing.T) {
+
+	taxa := 100
+	_, labels1, distanceMatrix1 := generateTree(taxa/2, 15, Normal_distribution)
+
+	//trees have different amount of taxas such that all splits beocome different
+
+	_, labels2, distanceMatrix2 := generateTree(taxa, 15, Normal_distribution)
+
+	_, _, array, tree := standardSetup(distanceMatrix1, labels1)
+	_, canon_tree := neighborJoin(distanceMatrix1, labels1, array, tree)
+
+	S, dead_record, array, tree := standardSetup(distanceMatrix2, labels2)
+	_, rapid_tree := rapidJoin(distanceMatrix2, S, labels2, dead_record, array, tree)
+
+	test := Split_Distance(canon_tree[0], rapid_tree[0])
+	fmt.Println(test)
+	//since graph always has 1 less edge than node we expect errors to be n*2-3
+	if test != (taxa*2 - 3) {
+		t.Errorf("split distance is 0! Trees should not be the same")
+	}
+}
+
 func Test_Compare_runtimes_canonical_against_rapid(t *testing.T) {
 	var time_start, time_end int64
 	var time_measured int
