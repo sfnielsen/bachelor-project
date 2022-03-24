@@ -31,6 +31,7 @@ func compare_trees(splits_tree1 []*split, splits_tree2 []*split) int {
 	//it is not easy to dynamically delete from split1 when we iterate through it. We use a variable to keep count of remaining instead.
 	splits1_remaining := len(splits_tree1)
 
+	//note we only find one match per split1 since this is the outer loop.
 	for _, split1 := range splits_tree1 {
 
 		for i, split2 := range splits_tree2 {
