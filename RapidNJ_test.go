@@ -374,8 +374,8 @@ func Test_Split_Distance_fails(t *testing.T) {
 
 	test := Split_Distance(canon_tree[0], rapid_tree[0])
 	fmt.Println(test)
-	//since graph always has 1 less edge than node we expect errors to be n*2-3
-	if test != (taxa*2 - 3) {
+	//since graph always has 1 less edge than node we expect errors to be n*2-3, and n-3 for the other one.
+	if test != (taxa*3 - 3*2) {
 		t.Errorf("split distance is 0! Trees should not be the same")
 	}
 }

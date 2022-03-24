@@ -28,6 +28,9 @@ func Split_Distance(node1 *Node, node2 *Node) int {
 
 func compare_trees(splits_tree1 []*split, splits_tree2 []*split) int {
 
+	//it is not easy to dynamically delete from split1 when we iterate through it. We use a variable to keep count of remaining instead.
+	splits1_remaining := len(splits_tree1)
+
 	for _, split1 := range splits_tree1 {
 
 		for i, split2 := range splits_tree2 {
@@ -35,13 +38,15 @@ func compare_trees(splits_tree1 []*split, splits_tree2 []*split) int {
 
 			if reflect.DeepEqual(split1.head, split2.head) && reflect.DeepEqual(split1.tail, split2.tail) {
 				splits_tree2 = append(splits_tree2[:i], splits_tree2[i+1:]...)
+				splits1_remaining--
 				break
 			}
 
 		}
 
 	}
-	return len(splits_tree2)
+	unmatched_splits := splits1_remaining + len(splits_tree2)
+	return unmatched_splits
 
 }
 
