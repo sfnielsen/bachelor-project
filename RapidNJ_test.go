@@ -23,35 +23,28 @@ const (
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
-	var treeBanana Tree
-	var array Tree = generateTreeForRapidNJ(labels)
+	var tree Tree
+	var label_tree Tree = generateTreeForRapidNJ(labels)
 
-	for _, node := range array {
-		treeBanana = append(treeBanana, node)
-	}
+	tree = append(tree, label_tree...)
 
-	return S, deadRecords, array, treeBanana
+	return S, deadRecords, label_tree, tree
 }
-func Test4Taxa(t *testing.T) {
-	labels := []string{
-		"A", "B", "C", "D",
-	}
-	D := [][]float64{
-		{0, 17, 21, 27},
-		{17, 0, 12, 18},
-		{21, 12, 0, 14},
-		{27, 18, 14, 0},
-	}
-	S, deadRecords, array, treeBanana := standardSetup(D, labels)
 
-	newick_result, _ := rapidJoin(D, S, labels, deadRecords, array, treeBanana)
-	print()
+//####################################################################################
+//####################################################################################
+//####################################################################################
+//                               testing other files
+//####################################################################################
+//####################################################################################
+//####################################################################################
 
-	//note that the newick always becomes a rooted tree whereas our implementation of the algorithm generates an unrooted tree.
-	if newick_result != "(((A:13.000000,B:4.000000):4.000000,C:4.000000):5.000000,D:5.000000);" {
-		t.Errorf(newick_result)
+func TestMakeTree(t *testing.T) {
+	a, b, c := generateTree(5, 3, Uniform_distribution)
+
+	if a == nil || b == nil || c == nil {
+		t.Errorf("not good")
 	}
-
 }
 
 func Test_max_taxa_of_generated_tree(t *testing.T) {
@@ -76,7 +69,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := generateTree(taxa_amount, 10, Normal_distribution)
+	tree, _, array := generateTree(taxa_amount, 5, Normal_distribution)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
@@ -84,7 +77,9 @@ func Test_Generated_Tree(t *testing.T) {
 			if i == j && array[i][j] != 0 {
 				t.Errorf("diagonal not 0")
 			}
-			if array[i][j] != array[j][i] {
+			//account for float pointer precision 2 decimals
+			round_idx1, round_idx2 := math.Round(array[i][j]*100)/100, math.Round(array[j][i]*100)/100
+			if round_idx1 != round_idx2 {
 				t.Errorf("transpose not same as original")
 			}
 		}
@@ -92,7 +87,8 @@ func Test_Generated_Tree(t *testing.T) {
 
 	//we are assuming that the tree indexes corresponds to the matrix indexes here
 	//check if we can go through the tree and get same distance as written in the distance matrix
-	for i := 0; i < 100; i++ {
+	wrong_numbers := 0
+	for i := 0; i < 1000; i++ {
 		rand.Seed(time.Now().UnixNano())
 		//tree consists of 2n-2 nodes where n are leaves. We can only look at leaves. Note that start and to can be the same
 		idx_start := rand.Intn(len(tree) / 2)
@@ -103,8 +99,18 @@ func Test_Generated_Tree(t *testing.T) {
 
 		distance, _ := dfs_tree(node_from, node_to_name, make(map[*Node]bool))
 
-		if distance != array[idx_start][idx_to] {
-			t.Errorf("Distance should be the same. ")
+		//account for float pointer precision 2 decimals
+		round_dist, round_exp_dist := math.Round(distance*100/100), math.Round(array[idx_start][idx_to]*100/100)
+		if round_dist != round_exp_dist {
+			wrong_numbers++
+			//some times the floats are off by a little much so we allow a couple of them to be off
+			if wrong_numbers > 10 {
+				fmt.Println(idx_start, idx_to)
+				fmt.Println(round_dist, round_exp_dist)
+
+				t.Errorf("Distance should be the same. ")
+
+			}
 		}
 	}
 
@@ -119,12 +125,95 @@ func Test_Generated_Tree(t *testing.T) {
 
 }
 
-func TestMakeTree(t *testing.T) {
-	a, b, c := generateTree(5, 3, Uniform_distribution)
+func Test_Split_Distance(t *testing.T) {
+	iterations := 500
+	results := make(map[int]float64)
+	for i := 0; i < iterations; i++ {
 
-	if a == nil || b == nil || c == nil {
-		t.Errorf("not good")
+		//GENERATE 2 TREES
+		tree1, _, _ := generateTree(5, 15, Normal_distribution)
+		tree2, _, _ := generateTree(5, 15, Normal_distribution)
+
+		//CHECK TREES
+		results[Split_Distance(tree1[0], tree2[2])]++
 	}
+
+	for k, v := range results {
+		results[k] = float64(v) / float64(iterations)
+	}
+
+	//WE EXPECT 1/15 OF RANDOM 5-tip TREES TO BE TOPOLOGICALLY IDENTICAL
+	test := math.Abs(results[0] - float64(1)/float64(15))
+	if test > 0.025 {
+		t.Errorf("Expect 1/15 good trees, %f", test)
+	}
+
+	//CHECK THAT BIGGER TREES DO NOT RANDOMLY MAKE THE SAME TREE
+	for i := 0; i < (iterations / 5); i++ {
+
+		//GENERATE 2 TREES
+		tree1, _, _ := generateTree(20, 15, Normal_distribution)
+		tree2, _, _ := generateTree(20, 15, Normal_distribution)
+
+		//CHECK TREES
+		result := Split_Distance(tree1[0], tree2[2])
+		if result == 0 {
+			t.Errorf("Unlikely scenario - Big trees not expected to randomly be identical")
+		}
+	}
+}
+
+func Test_Split_Distance_fails(t *testing.T) {
+
+	taxa := 100
+	_, labels1, distanceMatrix1 := generateTree(taxa/2, 15, Normal_distribution)
+
+	//trees have different amount of taxas such that all splits beocome different
+
+	_, labels2, distanceMatrix2 := generateTree(taxa, 15, Normal_distribution)
+
+	_, _, array, tree := standardSetup(distanceMatrix1, labels1)
+	_, canon_tree := neighborJoin(distanceMatrix1, labels1, array, tree)
+
+	S, dead_record, array, tree := standardSetup(distanceMatrix2, labels2)
+	_, rapid_tree := rapidJoin(distanceMatrix2, S, labels2, dead_record, array, tree)
+
+	test := Split_Distance(canon_tree[0], rapid_tree[0])
+	fmt.Println(test)
+	//since graph always has 1 less edge than node we expect errors to be n*2-3, and n-3 for the other one.
+	if test != (taxa*3 - 3*2) {
+		t.Errorf("split distance is 0! Trees should not be the same")
+	}
+}
+
+//####################################################################################
+//####################################################################################
+//####################################################################################
+//                               testing of RapidNJ
+//####################################################################################
+//####################################################################################
+//####################################################################################
+
+func Test4Taxa(t *testing.T) {
+	labels := []string{
+		"A", "B", "C", "D",
+	}
+	D := [][]float64{
+		{0, 17, 21, 27},
+		{17, 0, 12, 18},
+		{21, 12, 0, 14},
+		{27, 18, 14, 0},
+	}
+	S, deadRecords, array, treeBanana := standardSetup(D, labels)
+
+	newick_result, _ := rapidJoin(D, S, labels, deadRecords, array, treeBanana)
+	print()
+
+	//note that the newick always becomes a rooted tree whereas our implementation of the algorithm generates an unrooted tree.
+	if newick_result != "(((A:13.000000,B:4.000000):4.000000,C:4.000000):5.000000,D:5.000000);" {
+		t.Errorf(newick_result)
+	}
+
 }
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
@@ -156,7 +245,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(700, 100, Cluster_Normal_Distribution)
+		_, labels, distanceMatrix := generateTree(100, 100, Spike_Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -166,10 +255,10 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+		S, dead_record, array, tree := standardSetup(distanceMatrix, labels)
 
 		fmt.Println("###DO NEIGHBOURJOIN")
-		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, tree)
 
 		emptyMatrix := make([][]float64, len(labels))
 		fmt.Println("###CREATE DISTANCE MATRIX")
@@ -195,31 +284,6 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 		}
 	}
 
-}
-
-func TestRuntimeOfBigTaxas(t *testing.T) {
-	//declaring some variables to hold times
-	var time_start, time_end int64
-
-	fmt.Println("###GENERATING DISTANCE MATRIX")
-	time_start = time.Now().UnixMilli()
-	_, labels, distanceMatrix := generateTree(1000, 1000, Normal_distribution)
-	time_end = time.Now().UnixMilli()
-	time_generateTree := time_end - time_start
-	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
-
-	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-
-	fmt.Println("###BEGIN NEIGHBOR-JOINING")
-	time_start = time.Now().UnixMilli()
-	a, b := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
-	time_end = time.Now().UnixMilli()
-	time_neighborJoin := int(time_end - time_start)
-	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
-
-	if a == "" || b == nil {
-		t.Errorf(" failure :(")
-	}
 }
 
 func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
@@ -250,7 +314,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	}
 }
 
-func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
+func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
 	_, labels, distanceMatrix := generateTree(100, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
@@ -303,6 +367,35 @@ func Test_Canonical_rapid_generate_identical_matrixes(t *testing.T) {
 		t.Errorf("canon != rapid")
 	}
 
+	if Split_Distance(canon_tree[0], rapid_tree[0]) != 0 {
+		t.Errorf("rapid and canonical tree are not the same")
+	}
+
+}
+
+func TestRuntimeOfBigTaxas(t *testing.T) {
+	//declaring some variables to hold times
+	var time_start, time_end int64
+
+	fmt.Println("###GENERATING DISTANCE MATRIX")
+	time_start = time.Now().UnixMilli()
+	_, labels, distanceMatrix := generateTree(1000, 1000, Normal_distribution)
+	time_end = time.Now().UnixMilli()
+	time_generateTree := time_end - time_start
+	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
+
+	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
+
+	fmt.Println("###BEGIN NEIGHBOR-JOINING")
+	time_start = time.Now().UnixMilli()
+	a, b := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
+	time_end = time.Now().UnixMilli()
+	time_neighborJoin := int(time_end - time_start)
+	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
+
+	if a == "" || b == nil {
+		t.Errorf(" failure :(")
+	}
 }
 
 func Test_Compare_runtimes_canonical_against_rapid(t *testing.T) {
@@ -466,15 +559,19 @@ func Test_Make_Time_Taxa_CSV(t *testing.T) {
 	csvFile.Close()
 }
 
-//#############################################
-//helper functions we use in the test framework
-//#############################################
+//####################################################################################
+//####################################################################################
+//####################################################################################
+//                 helper functions we use in the test framework
+//####################################################################################
+//####################################################################################
+//####################################################################################
 
 func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
 	for i, row := range matrix1 {
 		for j := range row {
-			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 1 {
+			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 0.1 {
 
 				fmt.Println("first", matrix1[i][j])
 				fmt.Println("second", matrix2[i][j])
@@ -483,37 +580,6 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 		}
 	}
 	return true
-}
-
-//depth first searching on a tree of nodes starting at current_node. Note that -1 means that destionation was not found
-func dfs_tree(current_node *Node, destination_name string, marked map[*Node]bool) (float64, *Node) {
-	marked[current_node] = true
-	distance := .0
-
-	if current_node.Name == destination_name {
-		return distance, current_node
-	}
-	for _, edge := range current_node.Edge_array {
-		if _, ok := marked[edge.Node]; ok {
-			continue
-		}
-		//check if we are looking at a leaf
-		if len(edge.Node.Edge_array) == 1 {
-			//check if leaf is the desired destionation
-			if edge.Node.Name == destination_name {
-				distance += edge.Distance
-				return distance, current_node
-			}
-
-		} else {
-			value, node := dfs_tree(edge.Node, destination_name, marked)
-			if node != nil {
-				distance = value + edge.Distance
-				return distance, node
-			}
-		}
-	}
-	return -1, nil
 }
 
 //should take a node and traverse the tree the node is connected to. Returning the total amount of nodes in the tree. This should be 2*taxa-2

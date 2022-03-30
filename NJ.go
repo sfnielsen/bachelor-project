@@ -56,11 +56,9 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 		//convert to string
 		distance_to_x, _ := strconv.ParseFloat(v_iu, 64)
 		distance_to_y, _ := strconv.ParseFloat(v_ju, 64)
-
 		newNode := integrateNewNode(array[cur_i], array[cur_j], distance_to_x, distance_to_y)
 		array[cur_i] = newNode
 		tree = append(tree, newNode)
-
 		array = append(array[:cur_j], array[cur_j+1:]...)
 
 		//creating newick form
