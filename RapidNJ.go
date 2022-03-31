@@ -81,7 +81,7 @@ func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, dead
 		return (u_order[a].value > u_order[b].value)
 	})
 
-	for _, v := range u_order{
+	for _, v := range u_order {
 		for c := range S[v.index_in_d] {
 			s := S[v.index_in_d][c]
 			c_to_cD, ok := dead_records[s.index_j]
@@ -102,6 +102,7 @@ func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, dead
 				cur_j = c_to_cD
 				q_min = q
 			}
+
 		}
 	}
 
@@ -154,7 +155,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
-				 rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
 
 	n := len(D)
 
