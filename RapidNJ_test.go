@@ -1,35 +1,12 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
-	"os"
-	"strconv"
 	"testing"
 	"time"
 )
-
-const (
-	Shifting_Normal_Distribution string = "Sh_norm"
-	Normal_distribution          string = "Norm"
-	Uniform_distribution         string = "Uniform"
-	Cluster_Normal_Distribution  string = "Cluster_norm"
-	Spike_Normal_distribution    string = "Spike_norm"
-)
-
-func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
-	S := initSmatrix(D)
-	deadRecords := initDeadRecords(D)
-	var tree Tree
-	var label_tree Tree = generateTreeForRapidNJ(labels)
-
-	tree = append(tree, label_tree...)
-
-	return S, deadRecords, label_tree, tree
-}
 
 //####################################################################################
 //####################################################################################
@@ -40,7 +17,7 @@ func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree
 //####################################################################################
 
 func TestMakeTree(t *testing.T) {
-	a, b, c := generateTree(5, 3, Uniform_distribution)
+	a, b, c := GenerateTree(5, 3, Uniform_distribution)
 
 	if a == nil || b == nil || c == nil {
 		t.Errorf("not good")
@@ -54,7 +31,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 
 		taxa_amount := int(math.Pow(2, float64(i))) // power of 2
 		time_start := time.Now().UnixMilli()
-		generateTree(taxa_amount, 1, Normal_distribution)
+		GenerateTree(taxa_amount, 1, Normal_distribution)
 		time_end := time.Now().UnixMilli()
 		time := time_end - time_start
 
@@ -69,7 +46,7 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 func Test_Generated_Tree(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := generateTree(taxa_amount, 5, Normal_distribution)
+	tree, _, array := GenerateTree(taxa_amount, 5, Normal_distribution)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
@@ -131,8 +108,8 @@ func Test_Split_Distance(t *testing.T) {
 	for i := 0; i < iterations; i++ {
 
 		//GENERATE 2 TREES
-		tree1, _, _ := generateTree(5, 15, Normal_distribution)
-		tree2, _, _ := generateTree(5, 15, Normal_distribution)
+		tree1, _, _ := GenerateTree(5, 15, Normal_distribution)
+		tree2, _, _ := GenerateTree(5, 15, Normal_distribution)
 
 		//CHECK TREES
 		results[Split_Distance(tree1[0], tree2[2])]++
@@ -152,8 +129,8 @@ func Test_Split_Distance(t *testing.T) {
 	for i := 0; i < (iterations / 5); i++ {
 
 		//GENERATE 2 TREES
-		tree1, _, _ := generateTree(20, 15, Normal_distribution)
-		tree2, _, _ := generateTree(20, 15, Normal_distribution)
+		tree1, _, _ := GenerateTree(20, 15, Normal_distribution)
+		tree2, _, _ := GenerateTree(20, 15, Normal_distribution)
 
 		//CHECK TREES
 		result := Split_Distance(tree1[0], tree2[2])
@@ -166,11 +143,11 @@ func Test_Split_Distance(t *testing.T) {
 func Test_Split_Distance_fails(t *testing.T) {
 
 	taxa := 100
-	_, labels1, distanceMatrix1 := generateTree(taxa/2, 15, Normal_distribution)
+	_, labels1, distanceMatrix1 := GenerateTree(taxa/2, 15, Normal_distribution)
 
 	//trees have different amount of taxas such that all splits beocome different
 
-	_, labels2, distanceMatrix2 := generateTree(taxa, 15, Normal_distribution)
+	_, labels2, distanceMatrix2 := GenerateTree(taxa, 15, Normal_distribution)
 
 	_, _, array, tree := standardSetup(distanceMatrix1, labels1)
 	_, canon_tree := neighborJoin(distanceMatrix1, labels1, array, tree)
@@ -218,7 +195,7 @@ func Test4Taxa(t *testing.T) {
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(20, 15, Uniform_distribution)
+		_, labels, distanceMatrix := GenerateTree(20, 15, Uniform_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -245,7 +222,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := generateTree(100, 100, Spike_Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(100, 100, Spike_Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -288,7 +265,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 
 func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := generateTree(20, 15, Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -315,7 +292,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := generateTree(100, 15, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(100, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -371,192 +348,6 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 		t.Errorf("rapid and canonical tree are not the same")
 	}
 
-}
-
-func TestRuntimeOfBigTaxas(t *testing.T) {
-	//declaring some variables to hold times
-	var time_start, time_end int64
-
-	fmt.Println("###GENERATING DISTANCE MATRIX")
-	time_start = time.Now().UnixMilli()
-	_, labels, distanceMatrix := generateTree(1000, 1000, Normal_distribution)
-	time_end = time.Now().UnixMilli()
-	time_generateTree := time_end - time_start
-	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
-
-	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-
-	fmt.Println("###BEGIN NEIGHBOR-JOINING")
-	time_start = time.Now().UnixMilli()
-	a, b := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana)
-	time_end = time.Now().UnixMilli()
-	time_neighborJoin := int(time_end - time_start)
-	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
-
-	if a == "" || b == nil {
-		t.Errorf(" failure :(")
-	}
-}
-
-func Test_Compare_runtimes_canonical_against_rapid(t *testing.T) {
-	var time_start, time_end int64
-	var time_measured int
-	NewickFlag = false
-
-	_, labels, distanceMatrix := generateTree(1000, 15, Shifting_Normal_Distribution)
-	original_labels := make([]string, len(labels))
-	copy(original_labels, labels)
-
-	original_dist_mat := make([][]float64, len(distanceMatrix))
-	for i := range distanceMatrix {
-		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
-		copy(original_dist_mat[i], distanceMatrix[i])
-	}
-
-	_, _, array, tree := standardSetup(distanceMatrix, labels)
-
-	//run rapidJoin and measure the time
-	time_start = time.Now().UnixMilli()
-	fmt.Printf("###BEGINNING NJ###\n")
-	neighborJoin(distanceMatrix, labels, array, tree)
-	time_end = time.Now().UnixMilli()
-	time_measured = int(time_end - time_start)
-	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
-
-	emptyMatrix1 := make([][]float64, len(labels))
-	for i := range distanceMatrix {
-		emptyMatrix1[i] = make([]float64, len(labels))
-	}
-
-	labels_cpy := make([]string, len(original_labels))
-	copy(labels_cpy, original_labels)
-
-	dist_mat_cpy := make([][]float64, len(original_dist_mat))
-	for i := range original_dist_mat {
-		dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
-		copy(dist_mat_cpy[i], original_dist_mat[i])
-	}
-
-	S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
-
-	//run rapidJoin and measure the time
-	time_start = time.Now().UnixMilli()
-	fmt.Printf("###BEGINNING RAPIDNJ###\n")
-	rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree)
-	time_end = time.Now().UnixMilli()
-	time_measured = int(time_end - time_start)
-	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
-
-}
-
-func Test_Make_Time_Taxa_CSV(t *testing.T) {
-	taxavalue := 100
-	csvFile, err := os.Create("time_plot.csv")
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-	csvWriter := csv.NewWriter(csvFile)
-
-	label := []string{"taxa", "rapidnj_shifted", "canonical_shifted", "rapid_norm"}
-	csvWriter.Write(label)
-
-	for i := 1; i < 45; i++ {
-		var time_start, time_end int64
-		NewickFlag = false
-		fmt.Println()
-		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
-
-		//make first tree
-		_, labels, distanceMatrix := generateTree(i*taxavalue, 15, Shifting_Normal_Distribution)
-		original_labels := make([]string, len(labels))
-		copy(original_labels, labels)
-		original_dist_mat := make([][]float64, len(distanceMatrix))
-		for i := range distanceMatrix {
-			original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
-			copy(original_dist_mat[i], distanceMatrix[i])
-		}
-
-		_, _, array, tree := standardSetup(distanceMatrix, labels)
-
-		//make second tree tree
-		_, labels2, distanceMatrixUni := generateTree(i*taxavalue, 15, Normal_distribution)
-		original_labels2 := make([]string, len(labels2))
-		copy(original_labels2, labels2)
-
-		original_dist_mat2 := make([][]float64, len(distanceMatrixUni))
-		for i := range distanceMatrixUni {
-			original_dist_mat2[i] = make([]float64, len(distanceMatrixUni[i]))
-			copy(original_dist_mat2[i], distanceMatrixUni[i])
-		}
-
-		//_, _, array2, tree2 := standardSetup(distanceMatrixUni, labels2)
-
-		//run CANONICAL and measure the time on Shifting Norm distance matrix
-		time_start = time.Now().UnixMilli()
-		fmt.Printf("###BEGINNING NJ###\n")
-		neighborJoin(distanceMatrix, labels, array, tree)
-		time_end = time.Now().UnixMilli()
-		time_measured_nj := int(time_end - time_start)
-		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_nj)
-
-		emptyMatrix1 := make([][]float64, len(labels))
-		for i := range distanceMatrix {
-			emptyMatrix1[i] = make([]float64, len(labels))
-		}
-
-		labels_cpy := make([]string, len(original_labels))
-		copy(labels_cpy, original_labels)
-
-		dist_mat_cpy := make([][]float64, len(original_dist_mat))
-		for i := range original_dist_mat {
-			dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
-			copy(dist_mat_cpy[i], original_dist_mat[i])
-		}
-
-		S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
-
-		//run rapidJoin and measure the time on Shifting norm
-		time_start = time.Now().UnixMilli()
-		fmt.Printf("###BEGINNING RAPIDNJ###\n")
-		rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree)
-		time_end = time.Now().UnixMilli()
-		time_measured_rapid := int(time_end - time_start)
-		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
-
-		/// #######################  NEW MATRIX CODE STARTING ####################################
-		//run canonical and measure the time on standard norm
-		//time_start = time.Now().UnixMilli()
-		//fmt.Printf("###BEGINNING NJ###\n")
-		//neighborJoin(distanceMatrixUni, labels2, array2, tree2)
-		//time_end = time.Now().UnixMilli()
-		//time_measured_nj_second := int(time_end - time_start)
-		//fmt.Printf("### TIME ELAPSED NORMAL DIST: %d ms\n", time_measured_nj_second)
-
-		labels_cpy_2 := make([]string, len(original_labels2))
-		copy(labels_cpy_2, original_labels2)
-
-		dist_mat_cpy_2 := make([][]float64, len(original_dist_mat2))
-		for i := range original_dist_mat2 {
-			dist_mat_cpy_2[i] = make([]float64, len(original_dist_mat2[i]))
-			copy(dist_mat_cpy_2[i], original_dist_mat2[i])
-		}
-
-		S3, dead_record3, array3, tree3 := standardSetup(original_dist_mat2, labels_cpy_2)
-
-		//run rapidJoin and measure the time on standard norm distribution
-		time_start = time.Now().UnixMilli()
-		fmt.Printf("###BEGINNING RAPIDNJ###\n")
-		rapidJoin(dist_mat_cpy_2, S3, labels_cpy_2, dead_record3, array3, tree3)
-		time_end = time.Now().UnixMilli()
-		time_measured_rapid_second := int(time_end - time_start)
-		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid_second)
-
-		row := []string{strconv.Itoa(i * taxavalue), strconv.Itoa(time_measured_rapid), strconv.Itoa(time_measured_nj),
-			strconv.Itoa(time_measured_rapid_second)}
-		_ = csvWriter.Write(row)
-	}
-	csvWriter.Flush()
-	csvFile.Close()
 }
 
 //####################################################################################

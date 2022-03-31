@@ -3,9 +3,13 @@ import matplotlib.pyplot as plt
 
 ax = plt.gca()
 
-df = pd.read_csv('time_plot.csv')
+df = pd.read_csv('time_plot_canonical_vs_rapid.csv')
+
+    
 print(df)
-df.plot(kind='line',x='taxa',y='rapidnj_shifted',ax=ax)
-df.plot(kind='line',x='taxa',y='rapid_norm', color='green', ax=ax)
+
+df.plot(kind='scatter',marker="x",x='taxa',y='rapidnj',ax=ax, label="rapidnj")
+df.plot(kind='scatter',marker="x",x='taxa',y='canonical', color='red', ax=ax, label="canonical")
+
 
 plt.show()

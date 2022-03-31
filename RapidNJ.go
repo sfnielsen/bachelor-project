@@ -113,7 +113,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 	for i, row := range D {
 		sum := 0.0
 		for j := range row {
-			sum = sum + D[i][j]
+			sum += D[i][j]
 		}
 		u[i] = sum / float64(n-2)
 	}

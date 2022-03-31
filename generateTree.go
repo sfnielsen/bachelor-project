@@ -28,7 +28,7 @@ func remove(slice []*Node, s int) []*Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func generateTree(size int, max_length_random int, distance_generator string) (Tree, []string, [][]float64) {
+func GenerateTree(size int, max_length_random int, distance_generator string) (Tree, []string, [][]float64) {
 	array := generateArray(size)
 	tree := make(Tree, 0)
 
