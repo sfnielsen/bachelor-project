@@ -64,58 +64,72 @@ func MaxIntSlice(v []float64) (m float64) {
 	return m
 }
 
-func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int) (int, int) {
+type Slice struct {
+	sort.Float64Slice
+	idx []int
+}
+
+func (s Slice) Swap(i, j int) {
+	s.Float64Slice.Swap(i, j)
+	s.idx[i], s.idx[j] = s.idx[j], s.idx[i]
+}
+
+func NewSlice(n []float64) *Slice {
+	s := &Slice{Float64Slice: sort.Float64Slice(n), idx: make([]int, len(n))}
+	for i := range s.idx {
+		s.idx[i] = i
+	}
+	return s
+}
+
+func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int, totalLookups map[string]int) (int, int, map[string]int) {
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
-	//begin u-max ideaimpl
-	u_order := make([]*U_Tuple, 0)
-	for i, v := range u {
-		new_tuple := new(U_Tuple)
-		new_tuple.index_in_d = i
-		new_tuple.value = v
-		u_order = append(u_order, new_tuple)
-	}
-	sort.Slice(u_order, func(a, b int) bool {
-		return (u_order[a].value > u_order[b].value)
-	})
+	u_copy := make([]float64, len(u))
+	copy(u_copy, u)
+	u_sorted := NewSlice(u_copy)
+	sort.Sort((u_sorted))
 
-	for _, v := range u_order {
-		for c := range S[v.index_in_d] {
-			s := S[v.index_in_d][c]
+	for _, v := range u_sorted.idx {
+		for c := range S[v] {
+			s := S[v][c]
 			c_to_cD, ok := dead_records[s.index_j]
 			//check if dead record
 			if !ok {
 				continue
 			}
 			// case where i == j
-			if v.index_in_d == c_to_cD {
+			if v == c_to_cD {
 				continue
 			}
-			if s.value-u[v.index_in_d]-max_u > q_min {
+			if s.value-u[v]-max_u > q_min {
+				totalLookups["breaks"] += 1
 				break
 			}
-			q := s.value - u[v.index_in_d] - u[c_to_cD]
+			q := s.value - u[v] - u[c_to_cD]
 			if q < q_min {
-				cur_i = v.index_in_d
+				totalLookups["q_min update"] += 1
+
+				cur_i = v
 				cur_j = c_to_cD
 				q_min = q
 			}
+			totalLookups["total_lookups"] += 1
 
 		}
 	}
 
-	return cur_i, cur_j
+	return cur_i, cur_j, totalLookups
 }
 
-func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int) (int, int) {
+func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records map[int]int, totalLookupsMap map[string]int) (int, int, map[string]int) {
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
 	for r, row := range S {
-
 		for c := range row {
 			s := S[r][c]
 			c_to_cD, ok := dead_records[s.index_j]
@@ -128,18 +142,22 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, dead_records 
 				continue
 			}
 			if s.value-u[r]-max_u > q_min {
+				totalLookupsMap["breaks"] += 1
 				break
 			}
 			q := s.value - u[r] - u[c_to_cD]
 			if q < q_min {
+				totalLookupsMap["q_min update"] += 1
 				cur_i = r
 				cur_j = c_to_cD
 				q_min = q
 			}
+			totalLookupsMap["total_lookups"] += 1
+
 		}
 	}
 
-	return cur_i, cur_j
+	return cur_i, cur_j, totalLookupsMap
 }
 
 func generateTreeForRapidNJ(labels []string) Tree {
@@ -155,10 +173,9 @@ func generateTreeForRapidNJ(labels []string) Tree {
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
-	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int, map[string]int) (int, int, map[string]int), totalLookups map[string]int) (string, Tree, map[string]int) {
 
 	n := len(D)
-
 	u := make([]float64, n)
 
 	for i, row := range D {
@@ -170,7 +187,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 	}
 
 	//gets two indexes in D
-	cur_i, cur_j := rapidVersion(u, D, S, dead_records)
+	cur_i, cur_j, totalLookups := rapidVersion(u, D, S, dead_records, totalLookups)
 
 	//make sure p_i is the smallest index.
 	//both important for labels and for creation of new distance matrix.
@@ -205,7 +222,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion)
+		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion, totalLookups)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
@@ -227,11 +244,11 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 			array = remove(array, 0)
 
-			return newick, tree
+			return newick, tree, totalLookups
 
 		}
 	}
-	return "error", tree //this case should not be possible
+	return "error", tree, totalLookups //this case should not be possible
 }
 
 func createNewDistanceMatrix(S [][]Tuple, dead_records map[int]int, D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int) {

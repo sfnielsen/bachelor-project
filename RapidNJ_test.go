@@ -151,11 +151,11 @@ func Test_Split_Distance_fails(t *testing.T) {
 
 	_, labels2, distanceMatrix2 := GenerateTree(taxa, 15, Normal_distribution)
 
-	_, _, array, tree := standardSetup(distanceMatrix1, labels1)
+	_, _, array, tree,_ := standardSetup(distanceMatrix1, labels1)
 	_, canon_tree := neighborJoin(distanceMatrix1, labels1, array, tree)
 
-	S, dead_record, array, tree := standardSetup(distanceMatrix2, labels2)
-	_, rapid_tree := rapidJoin(distanceMatrix2, S, labels2, dead_record, array, tree, rapidNeighborJoining)
+	S, dead_record, array, tree,m := standardSetup(distanceMatrix2, labels2)
+	_, rapid_tree, _ := rapidJoin(distanceMatrix2, S, labels2, dead_record, array, tree, rapidNeighborJoining, m)
 
 	test := Split_Distance(canon_tree[0], rapid_tree[0])
 	fmt.Println(test)
@@ -183,9 +183,9 @@ func Test4Taxa(t *testing.T) {
 		{21, 12, 0, 14},
 		{27, 18, 14, 0},
 	}
-	S, deadRecords, array, treeBanana := standardSetup(D, labels)
+	S, deadRecords, array, treeBanana,m := standardSetup(D, labels)
 
-	newick_result, _ := rapidJoin(D, S, labels, deadRecords, array, treeBanana, rapidNeighborJoining)
+	newick_result, _, _ := rapidJoin(D, S, labels, deadRecords, array, treeBanana, rapidNeighborJoining,m)
 	print()
 
 	//note that the newick always becomes a rooted tree whereas our implementation of the algorithm generates an unrooted tree.
@@ -197,7 +197,7 @@ func Test4Taxa(t *testing.T) {
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(20, 15, Uniform_distribution)
+		_, labels, distanceMatrix := GenerateTree(100, 15, Uniform_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -207,8 +207,8 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana, rapidNeighborJoining)
+		S, dead_record, array, treeBanana,m := standardSetup(distanceMatrix, labels)
+		_, resulting_tree, _ := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana, rapidNeighborJoining_U_sorted, m)
 		emptyMatrix := make([][]float64, len(labels))
 		for i := range distanceMatrix {
 			emptyMatrix[i] = make([]float64, len(labels))
@@ -234,10 +234,10 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		S, dead_record, array, tree := standardSetup(distanceMatrix, labels)
+		S, dead_record, array, tree,m := standardSetup(distanceMatrix, labels)
 
 		fmt.Println("###DO NEIGHBOURJOIN")
-		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, tree, rapidNeighborJoining)
+		_, resulting_tree, _ := rapidJoin(distanceMatrix, S, labels, dead_record, array, tree, rapidNeighborJoining, m)
 
 		emptyMatrix := make([][]float64, len(labels))
 		fmt.Println("###CREATE DISTANCE MATRIX")
@@ -277,7 +277,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		_, _, array, tree := standardSetup(distanceMatrix, labels)
+		_, _, array, tree,_ := standardSetup(distanceMatrix, labels)
 		_, resulting_tree := neighborJoin(distanceMatrix, labels, array, tree)
 		emptyMatrix := make([][]float64, len(labels))
 		for i := range distanceMatrix {
@@ -304,7 +304,7 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 		copy(original_dist_mat[i], distanceMatrix[i])
 	}
 
-	_, _, array, tree := standardSetup(distanceMatrix, labels)
+	_, _, array, tree,m := standardSetup(distanceMatrix, labels)
 	_, canon_tree := neighborJoin(distanceMatrix, labels, array, tree)
 	emptyMatrix1 := make([][]float64, len(labels))
 	for i := range distanceMatrix {
@@ -322,8 +322,8 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 		copy(dist_mat_cpy[i], original_dist_mat[i])
 	}
 
-	S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
-	_, rapid_tree := rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree, rapidNeighborJoining)
+	S, dead_record, array, tree, m := standardSetup(dist_mat_cpy, labels_cpy)
+	_, rapid_tree, _ := rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree, rapidNeighborJoining, m)
 	emptyMatrix2 := make([][]float64, len(labels_cpy))
 	for i := range dist_mat_cpy {
 		emptyMatrix2[i] = make([]float64, len(labels_cpy))
@@ -364,8 +364,8 @@ func TestUMAXheuristic(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-		_, resulting_tree := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana, rapidNeighborJoining_U_sorted)
+		S, dead_record, array, treeBanana,m := standardSetup(distanceMatrix, labels)
+		_, resulting_tree, _ := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana, rapidNeighborJoining_U_sorted, m)
 		emptyMatrix := make([][]float64, len(labels))
 		for i := range distanceMatrix {
 			emptyMatrix[i] = make([]float64, len(labels))
@@ -379,7 +379,6 @@ func TestUMAXheuristic(t *testing.T) {
 	}
 
 }
-
 
 //####################################################################################
 //####################################################################################
