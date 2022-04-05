@@ -289,9 +289,9 @@ func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tr
 	[]string, [][]Tuple, map[int]int) {
 	tree, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, treeType)
 
-	S, dead_records, array, _ := standardSetup(distanceMatrix, labels)
+	S, live_records, array, _ := standardSetup(distanceMatrix, labels)
 
-	return array, tree, distanceMatrix, labels, S, dead_records
+	return array, tree, distanceMatrix, labels, S, live_records
 
 }
 
