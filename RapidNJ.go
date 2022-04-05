@@ -167,27 +167,33 @@ func create_u(D [][]float64) []float64 {
 	return u
 }
 
-func rapidNeighbourJoin(D [][]float64, labels []string, rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+func rapidNeighbourJoin(D [][]float64, labels []string, u_max_str u_max_strategy) (string, Tree) {
 
+	//setup initial data structures for rapidNJ
 	S := initSmatrix(D)
 	deadRecords := initDeadRecords(D)
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 	var tree Tree
 	tree = append(tree, label_tree...)
+	//total_nodes := len(S)
 
-	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, rapidVersion)
+	//run rapidNJ algorithm
+	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, u_max_str)
+
 	return newick, tree
 
 }
 
+type u_max_strategy func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)
+
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
-	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+	u_max_str u_max_strategy) (string, Tree) {
 
 	u := create_u(D)
 
 	//gets two indexes in D
-	cur_i, cur_j := rapidVersion(u, D, S, dead_records)
+	cur_i, cur_j := u_max_str(u, D, S, dead_records)
 
 	//make sure p_i is the smallest index.
 	//both important for labels and for creation of new distance matrix.
@@ -222,7 +228,7 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, dead_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoinRec(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion)
+		return rapidJoinRec(D_new, S_new, labels, dead_records_new, array, tree, u_max_str)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
