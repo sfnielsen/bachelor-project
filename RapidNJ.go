@@ -173,7 +173,8 @@ func generateTreeForRapidNJ(labels []string) Tree {
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
-	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int, map[string]int) (int, int, map[string]int), totalLookups map[string]int) (string, Tree, map[string]int) {
+	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int, map[string]int) (int, int, map[string]int),
+	totalLookups map[string]int, iteration int) (string, Tree, map[string]int) {
 
 	n := len(D)
 	u := make([]float64, n)
@@ -218,11 +219,11 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 	}
 
-	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j, len(tree))
+	D_new, S_new, dead_records_new := createNewDistanceMatrix(S, dead_records, D, cur_i, cur_j, iteration)
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion, totalLookups)
+		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion, totalLookups, iteration+1)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
