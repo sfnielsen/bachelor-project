@@ -28,11 +28,9 @@ func TestRuntimeOfBigTaxas() {
 	time_generateTree := time_end - time_start
 	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
 
-	S, dead_record, array, treeBanana := standardSetup(distanceMatrix, labels)
-
 	fmt.Println("###BEGIN NEIGHBOR-JOINING")
 	time_start = time.Now().UnixMilli()
-	a, b := rapidJoin(distanceMatrix, S, labels, dead_record, array, treeBanana, rapidNeighborJoining)
+	a, b := rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 	time_end = time.Now().UnixMilli()
 	time_neighborJoin := int(time_end - time_start)
 	fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
@@ -46,7 +44,7 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 	var time_start, time_end int64
 	var time_measured int
 
-	_, labels, distanceMatrix := GenerateTree(1000, 15, Shifting_Normal_Distribution)
+	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -79,13 +77,10 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 		dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
 		copy(dist_mat_cpy[i], original_dist_mat[i])
 	}
-
-	S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
-
 	//run rapidJoin and measure the time
 	time_start = time.Now().UnixMilli()
 	fmt.Printf("###BEGINNING RAPIDNJ###\n")
-	rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree, rapidNeighborJoining)
+	rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
 	time_end = time.Now().UnixMilli()
 	time_measured = int(time_end - time_start)
 	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
@@ -155,12 +150,10 @@ func Test_Make_Time_Taxa_CSV() {
 			copy(dist_mat_cpy[i], original_dist_mat[i])
 		}
 
-		S, dead_record, array, tree := standardSetup(dist_mat_cpy, labels_cpy)
-
 		//run rapidJoin and measure the time on Shifting norm
 		time_start = time.Now().UnixMilli()
 		fmt.Printf("###BEGINNING RAPIDNJ###\n")
-		rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree, rapidNeighborJoining)
+		rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
 		time_end = time.Now().UnixMilli()
 		time_measured_rapid := int(time_end - time_start)
 		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
@@ -182,13 +175,10 @@ func Test_Make_Time_Taxa_CSV() {
 			dist_mat_cpy_2[i] = make([]float64, len(original_dist_mat2[i]))
 			copy(dist_mat_cpy_2[i], original_dist_mat2[i])
 		}
-
-		S3, dead_record3, array3, tree3 := standardSetup(original_dist_mat2, labels_cpy_2)
-
 		//run rapidJoin and measure the time on standard norm distribution
 		time_start = time.Now().UnixMilli()
 		fmt.Printf("###BEGINNING RAPIDNJ###\n")
-		rapidJoin(dist_mat_cpy_2, S3, labels_cpy_2, dead_record3, array3, tree3, rapidNeighborJoining)
+		rapidNeighbourJoin(dist_mat_cpy_2, labels_cpy_2, rapidNeighborJoining)
 		time_end = time.Now().UnixMilli()
 		time_measured_rapid_second := int(time_end - time_start)
 		fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid_second)
@@ -216,6 +206,7 @@ func test_all_trees_on_rapidNj() {
 	NewickFlag = false
 
 	for i := 1; i < 31; i++ {
+		NewickFlag = false
 		var time_start, time_end int64
 		fmt.Println()
 		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
@@ -223,14 +214,14 @@ func test_all_trees_on_rapidNj() {
 		row := make([]string, len(treeTypes))
 		row = append(row, strconv.Itoa(i*taxavalue))
 		for _, treeType := range treeTypes {
-			array, tree, distanceMatrix, labels, S, dead_record := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
+			_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
 
 			//run rapidJoin and measure the time on Shifting norm
 			fmt.Printf(treeType)
 			fmt.Printf("###BEGINNING RAPIDNJ###\n")
 			time_start = time.Now().UnixMilli()
 
-			rapidJoin(distanceMatrix, S, labels, dead_record, array, tree, rapidNeighborJoining)
+			rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 			time_end = time.Now().UnixMilli()
 			time_measured_rapid := int(time_end - time_start)
 			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
@@ -261,9 +252,8 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 	var time_end float64
 	//STANDARD RAPID JOINING
 
-	S, dead_record, array, tree := standardSetup(distanceMatrix, labels)
 	time_start = float64(time.Now().UnixMilli())
-	rapidJoin(distanceMatrix, S, labels, dead_record, array, tree, rapidNeighborJoining)
+	rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 	time_end = float64(time.Now().UnixMilli())
 	standard_rapid_time := time_end - time_start
 	fmt.Println(standard_rapid_time)
@@ -275,9 +265,8 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 	}
 
 	//U SORTED RAPID JOINING
-	S, dead_record, array, tree = standardSetup(dist_mat_cpy, labels_cpy)
 	time_start = float64(time.Now().UnixMilli())
-	rapidJoin(dist_mat_cpy, S, labels_cpy, dead_record, array, tree, rapidNeighborJoining_U_sorted)
+	rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
 	time_end = float64(time.Now().UnixMilli())
 	U_max_heuristic_time := time_end - time_start
 	fmt.Println(U_max_heuristic_time)
@@ -298,16 +287,9 @@ func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree
 
 func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tree, Tree, [][]float64,
 	[]string, [][]Tuple, map[int]int) {
-	_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, treeType)
-	original_labels := make([]string, len(labels))
-	copy(original_labels, labels)
-	original_dist_mat := make([][]float64, len(distanceMatrix))
-	for i := range distanceMatrix {
-		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
-		copy(original_dist_mat[i], distanceMatrix[i])
-	}
+	tree, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, treeType)
 
-	S, dead_records, array, tree := standardSetup(distanceMatrix, labels)
+	S, dead_records, array, _ := standardSetup(distanceMatrix, labels)
 
 	return array, tree, distanceMatrix, labels, S, dead_records
 
@@ -318,5 +300,5 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	compare_runtime_on_umax_vs_normal_rapidnj()
+	test_all_trees_on_rapidNj()
 }

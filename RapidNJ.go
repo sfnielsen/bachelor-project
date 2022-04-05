@@ -153,14 +153,9 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
-//two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
-func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
-	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
-
+func create_u(D [][]float64) []float64 {
 	n := len(D)
-
 	u := make([]float64, n)
-
 	for i, row := range D {
 		sum := 0.0
 		for j := range row {
@@ -168,6 +163,28 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 		}
 		u[i] = sum / float64(n-2)
 	}
+
+	return u
+}
+
+func rapidNeighbourJoin(D [][]float64, labels []string, rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+
+	S := initSmatrix(D)
+	deadRecords := initDeadRecords(D)
+	var label_tree Tree = generateTreeForRapidNJ(labels)
+	var tree Tree
+	tree = append(tree, label_tree...)
+
+	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, rapidVersion)
+	return newick, tree
+
+}
+
+//two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
+func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, dead_records map[int]int, array Tree, tree Tree,
+	rapidVersion func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)) (string, Tree) {
+
+	u := create_u(D)
 
 	//gets two indexes in D
 	cur_i, cur_j := rapidVersion(u, D, S, dead_records)
@@ -205,7 +222,7 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoin(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion)
+		return rapidJoinRec(D_new, S_new, labels, dead_records_new, array, tree, rapidVersion)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
@@ -226,7 +243,6 @@ func rapidJoin(D [][]float64, S [][]Tuple, labels []string, dead_records map[int
 			array[1].Edge_array = append(array[1].Edge_array, new_edge_1)
 
 			array = remove(array, 0)
-
 			return newick, tree
 
 		}
