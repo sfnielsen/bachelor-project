@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"strconv"
 	"time"
@@ -100,7 +99,7 @@ func Test_Make_Time_Taxa_CSV() {
 	csvWriter.Write(label)
 
 	for i := 1; i < 27; i++ {
-		highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj := 0, math.Inf(1), 0, math.Inf(1)
+		highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj := 0, 9999999999999999, 0, 999999999999999
 		mean_rapidnj, mean_canonical := 0, 0
 
 		iterations := 10
@@ -147,7 +146,7 @@ func Test_Make_Time_Taxa_CSV() {
 				highest_canonical = time_measured_nj
 			}
 			if time_measured_nj < int(lowest_canonical) {
-				lowest_canonical = float64(time_measured_nj)
+				lowest_canonical = time_measured_nj
 			}
 
 			mean_canonical += time_measured_nj
@@ -180,16 +179,16 @@ func Test_Make_Time_Taxa_CSV() {
 				highest_rapidnj = time_measured_rapid
 			}
 			if time_measured_rapid < int(lowest_rapidnj) {
-				lowest_rapidnj = float64(time_measured_rapid)
+				lowest_rapidnj = (time_measured_rapid)
 			}
 
 		}
-
+		fmt.Println(highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj)
 		row := []string{strconv.Itoa(i * taxavalue), strconv.Itoa(mean_rapidnj / iterations), strconv.Itoa(mean_canonical / iterations),
 			strconv.Itoa((highest_rapidnj - int(lowest_rapidnj)) / 2), strconv.Itoa((highest_canonical - int(lowest_canonical)) / 2)}
 		_ = csvWriter.Write(row)
+		csvWriter.Flush()
 	}
-	csvWriter.Flush()
 	csvFile.Close()
 }
 
