@@ -107,8 +107,8 @@ func GenerateTree(size int, max_length_random int, distance_generator string) (T
 		}
 
 		if distance_generator == "Uniform" {
-			distance_to_x = float64(rand.Intn(max_length_random))
-			distance_to_y = float64(rand.Intn(max_length_random))
+			distance_to_x = float64(rand.Intn(max_length_random-1)) + 1
+			distance_to_y = float64(rand.Intn(max_length_random-1)) + 1
 
 		}
 

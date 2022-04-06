@@ -140,8 +140,6 @@ func Test_Split_Distance(t *testing.T) {
 	}
 }
 
-type convert func([]float64, [][]float64, [][]Tuple, map[int]int) (int, int)
-
 func Test_Split_Distance_fails(t *testing.T) {
 
 	taxa := 100
@@ -194,7 +192,7 @@ func Test4Taxa(t *testing.T) {
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(20, 15, Uniform_distribution)
+		_, labels, distanceMatrix := GenerateTree(100, 5, Uniform_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -220,7 +218,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_one_tree_on_rapidNj(t *testing.T) {
-	taxa := 2500
+	taxa := 2000
 
 	var time_start, time_end int64
 
@@ -411,8 +409,8 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 
 	for i, row := range matrix1 {
 		for j := range row {
-			if math.Abs(matrix1[i][j]-matrix2[i][j]) > 0.1 {
-
+			if math.Abs(matrix1[i][j]-matrix2[i][j]) > matrix1[i][j]*0.05 {
+				fmt.Println("indexes:", i, j)
 				fmt.Println("first", matrix1[i][j])
 				fmt.Println("second", matrix2[i][j])
 				return false

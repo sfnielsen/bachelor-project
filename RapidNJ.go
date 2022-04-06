@@ -75,6 +75,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 	return tree
 }
 
+//function to create initial u array
 func create_u(D [][]float64) []float64 {
 	n := len(D)
 	u := make([]float64, n)
@@ -83,8 +84,40 @@ func create_u(D [][]float64) []float64 {
 		for j := range row {
 			sum += D[i][j]
 		}
-		u[i] = sum / float64(n-2)
+		u[i] = float64(sum) / float64(n-2)
 	}
+
+	return u
+}
+
+//function to update u instead of initializing it each iteration.
+//this results in lacking precision due to float pointer errors
+//but speeds up the running time significantly
+func update_u(D [][]float64, u []float64, i int, j int) []float64 {
+
+	n := len(D)
+	for idx := range u {
+		u[idx] = u[idx]*float64(n-2) - D[idx][i] - D[idx][j]
+
+		new_dist := (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
+		u[idx] += new_dist
+
+		u[idx] /= float64(n - 3)
+
+	}
+
+	//update i with merge ij
+	u[i] = 0
+	for idx := range D {
+		if i != idx && j != idx {
+			u[i] += (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
+		}
+	}
+
+	u[i] /= float64(n - 3)
+
+	//remove j from the array
+	u = append(u[:j], u[j+1:]...)
 
 	return u
 }
@@ -99,23 +132,23 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	tree = append(tree, label_tree...)
 	total_nodes := len(S) - 1
 
+	u := create_u(D)
+
 	//run rapidNJ algorithm
-	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, total_nodes, s_search_strategy)
+	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, total_nodes, u, s_search_strategy)
 
 	return newick, tree
 
 }
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
-func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[int]int, array Tree, tree Tree, total_nodes int,
+func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[int]int, array Tree, tree Tree, total_nodes int, u []float64,
 	s_search_strategy S_Search_Strategy) (string, Tree) {
-
-	u := create_u(D)
 
 	//gets two indexes in D
 	cur_i, cur_j := s_search_strategy(u, D, S, live_records)
 
-	//make sure p_i is the smallest index.
+	//make sure cur_i is the smallest index.
 	//both important for labels and for creation of new distance matrix.
 	if cur_i > cur_j {
 		temp := cur_i
@@ -143,12 +176,18 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 
 	}
+
+	//update u for next iteration
+	u = update_u(D, u, cur_i, cur_j)
+
+	//update total nodes for next iteration
 	total_nodes++
+
 	D_new, S_new, live_records_new := createNewDistanceMatrix(S, live_records, D, cur_i, cur_j, total_nodes)
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoinRec(D_new, S_new, labels, live_records_new, array, tree, total_nodes, s_search_strategy)
+		return rapidJoinRec(D_new, S_new, labels, live_records_new, array, tree, total_nodes, u, s_search_strategy)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
