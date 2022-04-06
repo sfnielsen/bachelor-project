@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
+	"os"
+	"runtime/pprof"
 	"testing"
 	"time"
 )
@@ -103,7 +106,7 @@ func Test_Generated_Tree(t *testing.T) {
 }
 
 func Test_Split_Distance(t *testing.T) {
-	iterations := 500
+	iterations := 50
 	results := make(map[int]float64)
 	for i := 0; i < iterations; i++ {
 
@@ -121,7 +124,7 @@ func Test_Split_Distance(t *testing.T) {
 
 	//WE EXPECT 1/15 OF RANDOM 5-tip TREES TO BE TOPOLOGICALLY IDENTICAL
 	test := math.Abs(results[0] - float64(1)/float64(15))
-	if test > 0.025 {
+	if test > 0.05 {
 		t.Errorf("Expect 1/15 good trees, %f", test)
 	}
 
@@ -129,8 +132,8 @@ func Test_Split_Distance(t *testing.T) {
 	for i := 0; i < (iterations / 5); i++ {
 
 		//GENERATE 2 TREES
-		tree1, _, _ := GenerateTree(20, 15, Normal_distribution)
-		tree2, _, _ := GenerateTree(20, 15, Normal_distribution)
+		tree1, _, _ := GenerateTree(50, 15, Normal_distribution)
+		tree2, _, _ := GenerateTree(50, 15, Normal_distribution)
 
 		//CHECK TREES
 		result := Split_Distance(tree1[0], tree2[2])
@@ -217,29 +220,34 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 
 }
 
-func Test_one_tree_on_rapidNj(t *testing.T) {
-	taxa := 2000
+func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
+	fmt.Println("...running profiling...")
 
-	var time_start, time_end int64
+	taxa := 2500
 
-	NewickFlag = false
-	_, labels, distanceMatrix := GenerateTree(taxa, 15, Cluster_Normal_Distribution)
+	var time_start, time_end, time_measured_rapid int64
+
+	NewickFlag = true
+	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution)
+
 	time_start = time.Now().UnixMilli()
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	defer pprof.StopCPUProfile()
 	rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
-	time_end = time.Now().UnixMilli()
-	time_measured_rapid := time_end - time_start
-	fmt.Printf("### TIME ELAPSED: %d ms for cluster\n", time_measured_rapid)
+	pprof.StopCPUProfile()
 
-	NewickFlag = false
-	_, labels, distanceMatrix = GenerateTree(taxa, 15, Spike_Normal_distribution)
-	time_start = time.Now().UnixMilli()
-	rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 	time_end = time.Now().UnixMilli()
 	time_measured_rapid = time_end - time_start
-	fmt.Printf("### TIME ELAPSED: %d ms for spike\n", time_measured_rapid)
+	fmt.Printf("### TIME ELAPSED: %d ms for run ###\n", time_measured_rapid)
 
 	if 1 == 2 {
-		t.Errorf("bob")
+		t.Errorf("error")
 	}
 }
 
@@ -313,7 +321,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := GenerateTree(100, 15, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
