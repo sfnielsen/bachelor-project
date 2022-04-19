@@ -127,6 +127,8 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	//setup initial data structures for rapidNJ
 	S := initSmatrix(D)
 	liveRecords := initLiveRecords(D)
+	liveRecordsReverse := reverseMap(liveRecords)
+
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 	var tree Tree
 	tree = append(tree, label_tree...)
@@ -135,15 +137,15 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	u := create_u(D)
 
 	//run rapidNJ algorithm
-	newick, tree := rapidJoinRec(D, S, labels, liveRecords, label_tree, tree, total_nodes, u, s_search_strategy)
+	newick, tree := rapidJoinRec(D, S, labels, liveRecords, liveRecordsReverse, label_tree, tree, total_nodes, u, s_search_strategy)
 
 	return newick, tree
 
 }
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
-func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[int]int, array Tree, tree Tree, total_nodes int, u []float64,
-	s_search_strategy S_Search_Strategy) (string, Tree) {
+func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[int]int, live_records_reverse map[int]int,
+	array Tree, tree Tree, total_nodes int, u []float64, s_search_strategy S_Search_Strategy) (string, Tree) {
 
 	//gets two indexes in D
 	cur_i, cur_j := s_search_strategy(u, D, S, live_records)
@@ -183,11 +185,11 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 	//update total nodes for next iteration
 	total_nodes++
 
-	D_new, S_new, live_records_new := createNewDistanceMatrix(S, live_records, D, cur_i, cur_j, total_nodes)
+	D_new, S_new, live_records_new, live_records_reverse_new := createNewDistanceMatrix(S, live_records, live_records_reverse, D, cur_i, cur_j, total_nodes)
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoinRec(D_new, S_new, labels, live_records_new, array, tree, total_nodes, u, s_search_strategy)
+		return rapidJoinRec(D_new, S_new, labels, live_records_new, live_records_reverse_new, array, tree, total_nodes, u, s_search_strategy)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
@@ -215,7 +217,8 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 	return "error", tree //this case should not be possible
 }
 
-func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int) {
+func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records_reverse map[int]int,
+	D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int, map[int]int) {
 
 	//update D
 	D_new := update_D(D, p_i, p_j)
@@ -224,12 +227,24 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, D [][]float6
 	live_records = overwriteLiveRecords(live_records, p_i, p_j, new_map_key)
 
 	//allow quicker lookups when updating S
-	live_records_reverse := reverseMap((live_records))
+	live_records_reverse = update_live_records_reverse(live_records_reverse, p_i, p_j, new_map_key)
 
 	//update S
 	S_new := update_S(S, D, p_i, p_j, live_records_reverse)
 
-	return D_new, S_new, live_records
+	return D_new, S_new, live_records, live_records_reverse
+}
+
+func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+
+	for x := p_j + 1; x < len(live_records_reverse); x++ {
+		live_records_reverse[x-1] = live_records_reverse[x]
+	}
+
+	live_records_reverse[p_i] = new_map_key
+	delete(live_records_reverse, len(live_records_reverse)-1)
+
+	return live_records_reverse
 }
 
 func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
@@ -297,6 +312,7 @@ func overwriteLiveRecords(live_records map[int]int, p_i int, p_j int, new_map_ke
 			delete(live_records, k)
 		} else if v > p_j {
 			live_records[k] = v - 1
+
 		}
 
 	}

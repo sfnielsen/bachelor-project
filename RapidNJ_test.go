@@ -253,7 +253,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		_, labels, distanceMatrix := GenerateTree(1500, 100, Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(2000, 100, Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -321,7 +321,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
