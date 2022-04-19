@@ -31,20 +31,25 @@ func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) 
 
 }
 
-func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string, Tree) {
+func neighborJoin(D [][]float64, labels []string) (string, Tree) {
+
+	var label_tree Tree = generateTreeForRapidNJ(labels)
+	var tree Tree
+	tree = append(tree, label_tree...)
+
+	u := create_u(D)
+
+	newick, tree := neighborJoinRec(D, labels, label_tree, tree, u)
+
+	return newick, tree
+}
+
+func neighborJoinRec(D [][]float64, labels []string, array Tree, tree Tree, u []float64) (string, Tree) {
+
 	n := len(D)
 	Q := make([][]float64, n)
 	for i := range Q {
 		Q[i] = make([]float64, n)
-	}
-	u := make([]float64, n)
-
-	for i, row := range Q {
-		sum := 0.0
-		for j := range row {
-			sum = sum + D[i][j]
-		}
-		u[i] = sum / float64(n-2)
 	}
 
 	cur_i, cur_j := canonicalNeighborJoining(Q, u, D, n)
@@ -66,11 +71,13 @@ func neighborJoin(D [][]float64, labels []string, array Tree, tree Tree) (string
 		labels = append(labels[:cur_j], labels[cur_j+1:]...)
 	}
 
+	u = update_u(D, u, cur_i, cur_j)
+
 	D_new := createNewDistanceMatrixNJ(D, cur_i, cur_j)
 
 	//stop maybe
 	if len(D_new) > 2 {
-		neighborJoin(D_new, labels, array, tree)
+		neighborJoinRec(D_new, labels, array, tree, u)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"

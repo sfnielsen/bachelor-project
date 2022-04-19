@@ -152,8 +152,8 @@ func Test_Split_Distance_fails(t *testing.T) {
 
 	_, labels2, distanceMatrix2 := GenerateTree(taxa, 15, Normal_distribution)
 
-	_, _, array, tree := standardSetup(distanceMatrix1, labels1)
-	_, canon_tree := neighborJoin(distanceMatrix1, labels1, array, tree)
+	//_, _, array, tree := standardSetup(distanceMatrix1, labels1)
+	_, canon_tree := neighborJoin(distanceMatrix1, labels1)
 
 	_, rapid_tree := rapidNeighbourJoin(distanceMatrix2, labels2, rapidNeighborJoining)
 
@@ -239,7 +239,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 		log.Fatal("could not start CPU profile: ", err)
 	}
 	defer pprof.StopCPUProfile()
-	rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
+	neighborJoin(distanceMatrix, labels)
 	pprof.StopCPUProfile()
 
 	time_end = time.Now().UnixMilli()
@@ -304,8 +304,8 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 			copy(original_dist_mat[i], distanceMatrix[i])
 		}
 
-		_, _, array, tree := standardSetup(distanceMatrix, labels)
-		_, resulting_tree := neighborJoin(distanceMatrix, labels, array, tree)
+		//_, _, array, tree := standardSetup(distanceMatrix, labels)
+		_, resulting_tree := neighborJoin(distanceMatrix, labels)
 		emptyMatrix := make([][]float64, len(labels))
 		for i := range distanceMatrix {
 			emptyMatrix[i] = make([]float64, len(labels))
@@ -331,8 +331,8 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 		copy(original_dist_mat[i], distanceMatrix[i])
 	}
 
-	_, _, array, tree := standardSetup(distanceMatrix, labels)
-	_, canon_tree := neighborJoin(distanceMatrix, labels, array, tree)
+	//_, _, array, tree := standardSetup(distanceMatrix, labels)
+	_, canon_tree := neighborJoin(distanceMatrix, labels)
 	emptyMatrix1 := make([][]float64, len(labels))
 	for i := range distanceMatrix {
 		emptyMatrix1[i] = make([]float64, len(labels))

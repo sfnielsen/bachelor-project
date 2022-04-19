@@ -64,17 +64,6 @@ func MaxIntSlice(v []float64) (m float64) {
 	return m
 }
 
-func generateTreeForRapidNJ(labels []string) Tree {
-	tree := make(Tree, 0)
-
-	for _, label := range labels {
-		node_to_append := new(Node)
-		node_to_append.Name = label
-		tree = append(tree, node_to_append)
-	}
-	return tree
-}
-
 //function to create initial u array
 func create_u(D [][]float64) []float64 {
 	n := len(D)
@@ -120,6 +109,17 @@ func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 	u = append(u[:j], u[j+1:]...)
 
 	return u
+}
+
+func generateTreeForRapidNJ(labels []string) Tree {
+	tree := make(Tree, 0)
+
+	for _, label := range labels {
+		node_to_append := new(Node)
+		node_to_append.Name = label
+		tree = append(tree, node_to_append)
+	}
+	return tree
 }
 
 func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Search_Strategy) (string, Tree) {
