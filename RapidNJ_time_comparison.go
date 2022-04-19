@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"time"
@@ -89,7 +90,7 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 
 func Test_Make_Time_Taxa_CSV() {
 	taxavalue := 100
-	csvFile, err := os.Create("time_plot_canonical_vs_rapid.csv")
+	csvFile, err := os.Create("time_plot_canonical_vs_rapid_from2300.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -98,7 +99,7 @@ func Test_Make_Time_Taxa_CSV() {
 	label := []string{"taxa", "rapidnj", "canonical", "rapidnj_error", "canonical_error"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 27; i++ {
+	for i := 23; i < 45; i++ {
 		highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj := 0, 9999999999999999, 0, 999999999999999
 		mean_rapidnj, mean_canonical := 0, 0
 
@@ -184,8 +185,12 @@ func Test_Make_Time_Taxa_CSV() {
 
 		}
 		fmt.Println(highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj)
-		row := []string{strconv.Itoa(i * taxavalue), strconv.Itoa(mean_rapidnj / iterations), strconv.Itoa(mean_canonical / iterations),
-			strconv.Itoa((highest_rapidnj - int(lowest_rapidnj)) / 2), strconv.Itoa((highest_canonical - int(lowest_canonical)) / 2)}
+		row := []string{strconv.Itoa(i * taxavalue),
+			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
+			strconv.Itoa((highest_canonical-int(lowest_canonical))/2 + lowest_canonical),
+			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2),
+			fmt.Sprintf("%v", (math.Log(float64(highest_canonical))-math.Log(float64(lowest_canonical)))/2)}
+
 		_ = csvWriter.Write(row)
 		csvWriter.Flush()
 	}
@@ -200,34 +205,57 @@ func test_all_trees_on_rapidNj() {
 	}
 	csvWriter := csv.NewWriter(csvFile)
 
-	treeTypes := []string{Shifting_Normal_Distribution, Normal_distribution, Uniform_distribution,
-		Cluster_Normal_Distribution, Spike_Normal_distribution}
+	treeTypes := []string{Normal_distribution, Cluster_Normal_Distribution, Spike_Normal_distribution}
+	errs := []string{"norm_err", "cluster_err", "spike_err"}
 
-	csvWriter.Write(treeTypes)
+	labels := append(treeTypes, errs...)
+	labels = append([]string{"taxa"}, labels...)
+
+	csvWriter.Write(labels)
 	NewickFlag = false
 
-	for i := 1; i < 31; i++ {
+	for i := 1; i < 16; i++ {
 		NewickFlag = false
 		var time_start, time_end int64
 		fmt.Println()
 		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 
-		row := make([]string, len(treeTypes))
-		row = append(row, strconv.Itoa(i*taxavalue))
-		for _, treeType := range treeTypes {
-			_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
+		row := make([]string, 0)
+		row = append(row, strconv.Itoa(int((float64(i * taxavalue)))))
+		errors_row := make([]string, 0)
 
-			//run rapidJoin and measure the time on Shifting norm
+		for _, treeType := range treeTypes {
+			mean_rapidnj, highest_rapidnj, lowest_rapidnj := 0, 0, 99999999999999999
+			itrsize := 10
 			fmt.Printf(treeType)
 			fmt.Printf("###BEGINNING RAPIDNJ###\n")
-			time_start = time.Now().UnixMilli()
+			for j := 0; j < itrsize; j++ {
 
-			rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
-			time_end = time.Now().UnixMilli()
-			time_measured_rapid := int(time_end - time_start)
-			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
-			row = append(row, strconv.Itoa(time_measured_rapid))
+				_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
+
+				//run rapidJoin and measure the time on Shifting norm
+
+				time_start = time.Now().UnixMilli()
+
+				rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
+				time_end = time.Now().UnixMilli()
+				time_measured_rapid := int(time_end - time_start)
+
+				mean_rapidnj += time_measured_rapid
+				//finding if time was extrema
+				if time_measured_rapid > highest_rapidnj {
+					highest_rapidnj = time_measured_rapid
+				}
+				if time_measured_rapid < int(lowest_rapidnj) {
+					lowest_rapidnj = (time_measured_rapid)
+				}
+			}
+			fmt.Printf("### TIME ELAPSED: %d ms\n", mean_rapidnj/itrsize)
+			row = append(row, strconv.Itoa((highest_rapidnj-lowest_rapidnj)/2+lowest_rapidnj))
+			errors_row = append(errors_row, fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2))
+
 		}
+		row = append(row, errors_row...)
 		_ = csvWriter.Write(row)
 		csvWriter.Flush()
 
@@ -271,7 +299,6 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 	time_end = float64(time.Now().UnixMilli())
 	U_max_heuristic_time := time_end - time_start
 	fmt.Println(U_max_heuristic_time)
-
 }
 
 // #####################################################################################################################################
@@ -303,5 +330,5 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	Test_Make_Time_Taxa_CSV()
+	test_all_trees_on_rapidNj()
 }

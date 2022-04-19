@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plotData():
     ax = plt.gca()
@@ -20,12 +21,31 @@ def plotErrorbar():
 
     df = pd.read_csv('time_plot_canonical_vs_rapid.csv')
 
-    plt.errorbar(df.taxa, df.canonical, yerr=df.canonical_error, marker='x', label = 'CanonicalNJ',
+    plt.errorbar(df.taxa, np.log(df.canonical), yerr=df.canonical_error, marker='x', label = 'CanonicalNJ',
                 ecolor='red', fmt='None', capsize=2)
-    plt.errorbar(df.taxa, df.rapidnj, yerr=df.rapidnj_error, marker='x', label = 'RapidNJ',
+    plt.errorbar(df.taxa, np.log(df.rapidnj), yerr=df.rapidnj_error, marker='x', label = 'RapidNJ',
                 ecolor='blue', fmt='None', capsize=2)
     plt.legend(loc ='upper left')
 
+    plt.xlabel("# taxa")
+    plt.ylabel("Waittime in MS (ln scale)")
+
     plt.show()
 
+def plotAllTreesErrorbar():
+    ax = plt.gca()
+    
+    df = pd.read_csv('allTrees_timetest.csv')
+    plt.errorbar(df.taxa,  np.log(df.Norm), yerr= df.norm_err, marker='x', label = 'Norm',
+                ecolor='blue', fmt='None', capsize=2)
+    plt.errorbar(df.taxa,  np.log(df.Cluster_norm), yerr= df.cluster_err, marker='x', label = 'Cluster',
+                ecolor='orange', fmt='None', capsize=2)
+    plt.errorbar(df.taxa,  np.log(df.Spike_norm), yerr= df.spike_err, marker='x', label = 'Spike',
+                ecolor='green', fmt='None', capsize=2)
+
+    plt.legend(loc ='upper left')
+    plt.xlabel("# taxa")
+    plt.ylabel("Y axis label")
+
+    plt.show()
 plotErrorbar()
