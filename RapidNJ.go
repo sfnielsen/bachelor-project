@@ -11,7 +11,7 @@ import (
 var NewickFlag bool = true
 
 //function to initialize dead records
-func initDeadRecords(D [][]float64) map[int]int {
+func initLiveRecords(D [][]float64) map[int]int {
 	live_records := make(map[int]int)
 	for i := range D {
 		live_records[i] = i
@@ -126,7 +126,7 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 
 	//setup initial data structures for rapidNJ
 	S := initSmatrix(D)
-	deadRecords := initDeadRecords(D)
+	liveRecords := initLiveRecords(D)
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 	var tree Tree
 	tree = append(tree, label_tree...)
@@ -135,7 +135,7 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	u := create_u(D)
 
 	//run rapidNJ algorithm
-	newick, tree := rapidJoinRec(D, S, labels, deadRecords, label_tree, tree, total_nodes, u, s_search_strategy)
+	newick, tree := rapidJoinRec(D, S, labels, liveRecords, label_tree, tree, total_nodes, u, s_search_strategy)
 
 	return newick, tree
 
@@ -217,6 +217,49 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 
 func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int) {
 
+	//update D
+	D_new := update_D(D, p_i, p_j)
+
+	//Overwrite live records
+	live_records = overwriteLiveRecords(live_records, p_i, p_j, new_map_key)
+
+	//allow quicker lookups when updating S
+	live_records_reverse := reverseMap((live_records))
+
+	//update S
+	S_new := update_S(S, D, p_i, p_j, live_records_reverse)
+
+	return D_new, S_new, live_records
+}
+
+func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
+	S_new := S
+	//overwrite the row p_i where we want to store merged ij
+	for j := 0; j < len(D[p_i]); j++ {
+		var tuple Tuple
+		var result int
+
+		tuple.value = D[p_i][j]
+		result = live_records_reverse[j]
+
+		tuple.index_j = result
+		S_new[p_i][j] = tuple
+
+	}
+	//cut excess data away
+	S_new[p_i] = S_new[p_i][:len(D)-1]
+
+	//sort merged row
+	sort.Slice(S_new[p_i], func(a, b int) bool {
+		return (S_new[p_i][a].value < S_new[p_i][b].value)
+	})
+
+	//delete row in S
+	S_new = append(S[:p_j], S[p_j+1:]...)
+	return S_new
+}
+
+func update_D(D [][]float64, p_i int, p_j int) [][]float64 {
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
@@ -240,7 +283,10 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, D [][]float6
 		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
 	}
 
-	//Overwrite dead records
+	return D_new
+}
+
+func overwriteLiveRecords(live_records map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
 	for k, v := range live_records {
 		if _, ok := live_records[k]; !ok {
 			continue
@@ -256,36 +302,7 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, D [][]float6
 	}
 	live_records[new_map_key] = p_i
 
-	//allow quicker lookups
-	live_records_reverse := reverseMap((live_records))
-
-	//fix S
-	S_new := S
-
-	//overwrite the row p_i where we want to store merged ij
-	for j := 0; j < len(D[p_i]); j++ {
-		var tuple Tuple
-		var result int
-
-		tuple.value = D[p_i][j]
-		result = live_records_reverse[j]
-
-		tuple.index_j = result
-		S_new[p_i][j] = tuple
-
-	}
-	//cut excess data away
-	S_new[p_i] = S_new[p_i][:len(D_new)]
-
-	//sort merged row
-	sort.Slice(S_new[p_i], func(a, b int) bool {
-		return (S_new[p_i][a].value < S_new[p_i][b].value)
-	})
-
-	//delete row in S
-	S_new = append(S[:p_j], S[p_j+1:]...)
-
-	return D_new, S_new, live_records
+	return live_records
 }
 
 func reverseMap(m map[int]int) map[int]int {
