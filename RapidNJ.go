@@ -96,24 +96,24 @@ func create_u(D [][]float64) []float64 {
 func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 
 	n := len(D)
-	for idx := range u {
-		u[idx] = u[idx]*float64(n-2) - D[idx][i] - D[idx][j]
-
-		new_dist := (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
-		u[idx] += new_dist
-
-		u[idx] /= float64(n - 3)
-
-	}
 
 	//update i with merge ij
 	u[i] = 0
-	for idx := range D {
-		if i != idx && j != idx {
-			u[i] += (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
-		}
-	}
 
+	for idx := range u {
+		if idx == i || idx == j {
+			continue
+		}
+		u[idx] = u[idx]*float64(n-2) - D[idx][i] - D[idx][j]
+		new_dist := (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
+
+		u[idx] += new_dist
+		u[idx] /= float64(n - 3)
+
+		//also add value to ij merge
+		u[i] += new_dist
+
+	}
 	u[i] /= float64(n - 3)
 
 	//remove j from the array
