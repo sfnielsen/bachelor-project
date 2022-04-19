@@ -88,9 +88,77 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 
 }
 
+func Test_make_rapid_u_updates_CSV() {
+	taxavalue := 100
+	csvFile, err := os.Create("time_plot_canonical_vs_rapid_from_u_update.csv")
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+
+	label := []string{"taxa", "rapidnj", "rapidnj_error"}
+	csvWriter.Write(label)
+
+	for i := 1; i < 45; i++ {
+		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
+		mean_rapidnj := 0
+
+		iterations := 10
+		for j := 0; j < iterations; j++ {
+			var time_start, time_end int64
+			fmt.Println()
+			fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+
+			//make first tree
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution)
+			original_labels := make([]string, len(labels))
+			copy(original_labels, labels)
+			original_dist_mat := make([][]float64, len(distanceMatrix))
+			for i := range distanceMatrix {
+				original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+				copy(original_dist_mat[i], distanceMatrix[i])
+			}
+
+			labels_cpy := make([]string, len(original_labels))
+			copy(labels_cpy, original_labels)
+
+			dist_mat_cpy := make([][]float64, len(original_dist_mat))
+			for i := range original_dist_mat {
+				dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+				copy(dist_mat_cpy[i], original_dist_mat[i])
+			}
+
+			//run rapidJoin and measure the time on Shifting norm
+			time_start = time.Now().UnixMilli()
+			fmt.Printf("###BEGINNING RAPIDNJ###\n")
+			rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
+			time_end = time.Now().UnixMilli()
+			time_measured_rapid := int(time_end - time_start)
+			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
+
+			mean_rapidnj += time_measured_rapid
+			//finding if time was extrema
+			if time_measured_rapid > highest_rapidnj {
+				highest_rapidnj = time_measured_rapid
+			}
+			if time_measured_rapid < int(lowest_rapidnj) {
+				lowest_rapidnj = (time_measured_rapid)
+			}
+
+		}
+		fmt.Println(highest_rapidnj, lowest_rapidnj)
+		row := []string{strconv.Itoa(i * taxavalue),
+			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
+			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2)}
+		_ = csvWriter.Write(row)
+		csvWriter.Flush()
+	}
+	csvFile.Close()
+}
+
 func Test_Make_Time_Taxa_CSV() {
 	taxavalue := 100
-	csvFile, err := os.Create("time_plot_canonical_vs_rapid_from2300.csv")
+	csvFile, err := os.Create("time_plot_canonical_vs_rapid_from_u_update.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -99,7 +167,7 @@ func Test_Make_Time_Taxa_CSV() {
 	label := []string{"taxa", "rapidnj", "canonical", "rapidnj_error", "canonical_error"}
 	csvWriter.Write(label)
 
-	for i := 23; i < 45; i++ {
+	for i := 1; i < 45; i++ {
 		highest_canonical, lowest_canonical, highest_rapidnj, lowest_rapidnj := 0, 9999999999999999, 0, 999999999999999
 		mean_rapidnj, mean_canonical := 0, 0
 
@@ -330,5 +398,5 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	test_all_trees_on_rapidNj()
+	Test_make_rapid_u_updates_CSV()
 }

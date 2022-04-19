@@ -92,7 +92,7 @@ func GenerateTree(size int, max_length_random int, distance_generator string) (T
 			}
 		}
 		if distance_generator == "Spike_norm" {
-			if noOfEdgesToClosestTip(element_x, make(map[string]bool)) > 2 || noOfEdgesToClosestTip(element_y, make(map[string]bool)) > 2 {
+			if noOfEdgesToClosestTip(element_x, make(map[string]bool)) > 1 || noOfEdgesToClosestTip(element_y, make(map[string]bool)) > 2 {
 				distance_to_x = math.Floor(((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
 				distance_to_y = math.Floor(float64((rand.NormFloat64()*0.2)+1.0)*float64(max_length_random)*100) / 100
 			} else {
