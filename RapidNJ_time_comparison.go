@@ -374,7 +374,7 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 //helper methods
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
-	deadRecords := initDeadRecords(D)
+	deadRecords := initLiveRecords(D)
 	var tree Tree
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 

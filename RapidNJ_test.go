@@ -223,11 +223,11 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	fmt.Println("...running profiling...")
 
-	taxa := 2500
+	taxa := 4000
 
 	var time_start, time_end, time_measured_rapid int64
 
-	NewickFlag = true
+	NewickFlag = false
 	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution)
 
 	time_start = time.Now().UnixMilli()
@@ -239,7 +239,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 		log.Fatal("could not start CPU profile: ", err)
 	}
 	defer pprof.StopCPUProfile()
-	neighborJoin(distanceMatrix, labels)
+	rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 	pprof.StopCPUProfile()
 
 	time_end = time.Now().UnixMilli()
@@ -323,7 +323,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
