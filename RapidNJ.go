@@ -64,17 +64,6 @@ func MaxIntSlice(v []float64) (m float64) {
 	return m
 }
 
-func generateTreeForRapidNJ(labels []string) Tree {
-	tree := make(Tree, 0)
-
-	for _, label := range labels {
-		node_to_append := new(Node)
-		node_to_append.Name = label
-		tree = append(tree, node_to_append)
-	}
-	return tree
-}
-
 //function to create initial u array
 func create_u(D [][]float64) []float64 {
 	n := len(D)
@@ -96,30 +85,41 @@ func create_u(D [][]float64) []float64 {
 func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 
 	n := len(D)
-	for idx := range u {
-		u[idx] = u[idx]*float64(n-2) - D[idx][i] - D[idx][j]
-
-		new_dist := (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
-		u[idx] += new_dist
-
-		u[idx] /= float64(n - 3)
-
-	}
 
 	//update i with merge ij
 	u[i] = 0
-	for idx := range D {
-		if i != idx && j != idx {
-			u[i] += (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
-		}
-	}
 
+	for idx := range u {
+		if idx == i || idx == j {
+			continue
+		}
+		u[idx] = u[idx]*float64(n-2) - D[idx][i] - D[idx][j]
+		new_dist := (D[i][idx] + D[j][idx] - D[i][j]) / 2.0
+
+		u[idx] += new_dist
+		u[idx] /= float64(n - 3)
+
+		//also add value to ij merge
+		u[i] += new_dist
+
+	}
 	u[i] /= float64(n - 3)
 
 	//remove j from the array
 	u = append(u[:j], u[j+1:]...)
 
 	return u
+}
+
+func generateTreeForRapidNJ(labels []string) Tree {
+	tree := make(Tree, 0)
+
+	for _, label := range labels {
+		node_to_append := new(Node)
+		node_to_append.Name = label
+		tree = append(tree, node_to_append)
+	}
+	return tree
 }
 
 func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Search_Strategy) (string, Tree) {

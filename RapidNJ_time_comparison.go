@@ -55,12 +55,12 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 		copy(original_dist_mat[i], distanceMatrix[i])
 	}
 
-	_, _, array, tree := standardSetup(distanceMatrix, labels)
+	//_, _, array, tree := standardSetup(distanceMatrix, labels)
 
 	//run rapidJoin and measure the time
 	time_start = time.Now().UnixMilli()
 	fmt.Printf("###BEGINNING NJ###\n")
-	neighborJoin(distanceMatrix, labels, array, tree)
+	neighborJoin(distanceMatrix, labels)
 	time_end = time.Now().UnixMilli()
 	time_measured = int(time_end - time_start)
 	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
@@ -119,7 +119,7 @@ func Test_Make_Time_Taxa_CSV() {
 				copy(original_dist_mat[i], distanceMatrix[i])
 			}
 
-			_, _, array, tree := standardSetup(distanceMatrix, labels)
+			//_, _, array, tree := standardSetup(distanceMatrix, labels)
 
 			//make second tree tree
 			_, labels2, distanceMatrixUni := GenerateTree(i*taxavalue, 15, Uniform_distribution)
@@ -137,7 +137,7 @@ func Test_Make_Time_Taxa_CSV() {
 			//run CANONICAL and measure the time on Shifting Norm distance matrix
 			time_start = time.Now().UnixMilli()
 			fmt.Printf("###BEGINNING NJ###\n")
-			neighborJoin(distanceMatrix, labels, array, tree)
+			neighborJoin(distanceMatrix, labels)
 			time_end = time.Now().UnixMilli()
 			time_measured_nj := int(time_end - time_start)
 			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_nj)
