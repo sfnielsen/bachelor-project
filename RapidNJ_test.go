@@ -227,7 +227,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 
 	var time_start, time_end, time_measured_rapid int64
 
-	NewickFlag = false
+	NewickFlag = true
 	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution)
 
 	time_start = time.Now().UnixMilli()
