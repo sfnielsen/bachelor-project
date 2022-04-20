@@ -284,6 +284,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 		//	fmt.Println(resulting_distance_matrix[i])
 		//}
 		fmt.Println("###COMPARE WITH ORIGINAL")
+
 		are_they_the_same := compareDistanceMatrixes(original_dist_mat, resulting_distance_matrix)
 		if !are_they_the_same {
 			t.Errorf(" failure :(")
@@ -321,7 +322,7 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(500, 15, Normal_distribution)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -361,19 +362,20 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 	cmp_rapid_original := compareDistanceMatrixes(original_dist_mat, resulting_rapid_matrix)
 
 	if !(cmp_canon_original) {
-		t.Errorf(" canon != origninal")
+		t.Errorf("error: canon != origninal")
 	}
 	if !(cmp_rapid_original) {
-		t.Errorf(" rapid != original")
+		t.Errorf("error: rapid != original")
 	}
 	cmp_canon_rapid := compareDistanceMatrixes(resulting_canonical_matrix, resulting_rapid_matrix)
 	//this case should not be possible of passed the two other comparisons
 	if !(cmp_canon_rapid) {
-		t.Errorf("canon != rapid")
+		t.Errorf("error: canon != rapid")
 	}
 
-	if Split_Distance(canon_tree[0], rapid_tree[0]) != 0 {
-		t.Errorf("rapid and canonical tree are not the same")
+	errors := Split_Distance(canon_tree[0], rapid_tree[0])
+	if errors != 0 {
+		t.Errorf("error: rapid and canonical tree are not the same, %d errors", errors)
 	}
 
 }

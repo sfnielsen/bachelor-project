@@ -80,8 +80,7 @@ func create_u(D [][]float64) []float64 {
 }
 
 //function to update u instead of initializing it each iteration.
-//this results in lacking precision due to float pointer errors
-//but speeds up the running time significantly
+//This speeds up the running time significantly
 func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 
 	n := len(D)
@@ -106,7 +105,11 @@ func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 	u[i] /= float64(n - 3)
 
 	//remove j from the array
-	u = append(u[:j], u[j+1:]...)
+	u[j] = 0
+	u[j] = u[len(u)-1]
+	u[len(u)-1] = 0
+	u = u[:len(u)-1]
+	//u = append(u[:j], u[j+1:]...)
 
 	return u
 }
@@ -171,11 +174,20 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 		array[cur_i] = newNode
 		tree = append(tree, newNode)
 
-		array = append(array[:cur_j], array[cur_j+1:]...)
+		//array = append(array[:cur_j], array[cur_j+1:]...)
+
+		array[cur_j] = array[len(array)-1]
+		array[len(array)-1] = nil
+		array = array[:len(array)-1]
 
 		//creating newick form
 		labels[cur_i] = "(" + labels[cur_i] + ":" + v_iu + "," + labels[cur_j] + ":" + v_ju + ")"
-		labels = append(labels[:cur_j], labels[cur_j+1:]...)
+
+		//labels = append(labels[:cur_j], labels[cur_j+1:]...)
+
+		labels[cur_j] = labels[len(labels)-1]
+		labels[len(labels)-1] = ""
+		labels = labels[:len(labels)-1]
 
 	}
 
@@ -224,7 +236,7 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records
 	D_new := update_D(D, p_i, p_j)
 
 	//Overwrite live records
-	live_records = overwriteLiveRecords(live_records, p_i, p_j, new_map_key)
+	live_records = update_live_records(live_records, p_i, p_j, new_map_key)
 
 	//allow quicker lookups when updating S
 	live_records_reverse = update_live_records_reverse(live_records_reverse, p_i, p_j, new_map_key)
@@ -233,18 +245,6 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records
 	S_new := update_S(S, D, p_i, p_j, live_records_reverse)
 
 	return D_new, S_new, live_records, live_records_reverse
-}
-
-func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
-
-	for x := p_j + 1; x < len(live_records_reverse); x++ {
-		live_records_reverse[x-1] = live_records_reverse[x]
-	}
-
-	live_records_reverse[p_i] = new_map_key
-	delete(live_records_reverse, len(live_records_reverse)-1)
-
-	return live_records_reverse
 }
 
 func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
@@ -270,11 +270,32 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	})
 
 	//delete row in S
-	S_new = append(S[:p_j], S[p_j+1:]...)
+	//S_new = append(S[:p_j], S[p_j+1:]...)
+
+	S_new[p_j] = nil
+	S_new[p_j] = S_new[len(S_new)-1]
+	S_new[len(S_new)-1] = nil
+	S_new = S_new[:len(S_new)-1]
+
 	return S_new
 }
 
 func update_D(D [][]float64, p_i int, p_j int) [][]float64 {
+
+	//update i rows/cols
+	D = update_row_col_i(D, p_i, p_j)
+
+	//remove j rows/cols
+	D = update_row_col_j(D, p_j)
+
+	return D
+}
+
+func update_row_col_i(D [][]float64, p_i int, p_j int) [][]float64 {
+
+	row_to_delete := make([]float64, len(D[0]))
+	copy(row_to_delete, D[p_j])
+
 	for k := 0; k < len(D); k++ {
 		if p_i == k {
 			continue
@@ -289,36 +310,71 @@ func update_D(D [][]float64, p_i int, p_j int) [][]float64 {
 
 		}
 	}
-
-	//delete row in D
-	D_new := append(D[:p_j], D[p_j+1:]...)
-
-	//delete column in D
-	for i := 0; i < len(D_new); i++ {
-		D_new[i] = append(D_new[i][:p_j], D_new[i][p_j+1:]...)
-	}
-
-	return D_new
+	return D
 }
 
-func overwriteLiveRecords(live_records map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+func update_row_col_j(D [][]float64, p_j int) [][]float64 {
+
+	//delete last row in D and move it to p_j
+	D[p_j] = D[len(D)-1]
+	D[len(D)-1] = nil
+	D = D[:len(D)-1]
+
+	//delete last column in D and move it to p_j
+	for i := 0; i < len(D); i++ {
+		D[i][p_j] = D[i][len(D[i])-1]
+		D[i][len(D[i])-1] = 0
+		D[i] = D[i][:len(D[i])-1]
+	}
+
+	return D
+}
+
+func update_live_records(live_records map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+
+	var last_k, last_v int
+
+	last_v = len(live_records) - 1
+
 	for k, v := range live_records {
 		if _, ok := live_records[k]; !ok {
 			continue
 		}
+		if v == last_v {
+			last_k = k
+		}
+		if v == p_j {
+			delete(live_records, k)
+		}
 		if v == p_i {
 			delete(live_records, k)
-		} else if v == p_j {
-			delete(live_records, k)
-		} else if v > p_j {
-			live_records[k] = v - 1
-
 		}
 
+		//else if v > p_j {
+		//	live_records[k] = v - 1
+
+	}
+
+	if _, ok := live_records[last_k]; ok {
+		live_records[last_k] = p_j
 	}
 	live_records[new_map_key] = p_i
 
 	return live_records
+}
+
+func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+
+	//for x := p_j + 1; x < len(live_records_reverse); x++ {
+	//	live_records_reverse[x-1] = live_records_reverse[x]
+	//}
+
+	live_records_reverse[p_i] = new_map_key
+	live_records_reverse[p_j] = live_records_reverse[len(live_records_reverse)-1]
+	delete(live_records_reverse, len(live_records_reverse)-1)
+	//delete(live_records_reverse, len(live_records_reverse)-1)
+
+	return live_records_reverse
 }
 
 func reverseMap(m map[int]int) map[int]int {
