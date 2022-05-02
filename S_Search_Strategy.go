@@ -7,7 +7,7 @@ import (
 
 type S_Search_Strategy func(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int)
 
-func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
+func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int, row_for_new_it int) (int, int) {
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
@@ -52,35 +52,56 @@ func rapidNeighborJoining_U_sorted(u []float64, D [][]float64, S [][]Tuple, live
 	return cur_i, cur_j
 }
 
+//####################################
+//vars for performing tests on rapid NJ
+//####################################
+var total_lookups, total_updates int
+var old_i int = -1
+var column_depth map[int]int = make(map[int]int)
+
+var extra_cost int
+var last_q_min float64 = math.MaxFloat64
+
+var start, end, total int64
+
+//####################################
+//####################################
+//####################################
+
 func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
 	for r, row := range S {
-
 		for c := range row {
+
+			if c == 0 {
+				continue
+			}
+
 			s := S[r][c]
+
+			if s.value-u[r]-max_u > q_min {
+				break
+			}
+
 			c_to_cD, ok := live_records[s.index_j]
+
 			//check if dead record
 			if !ok {
 				continue
 			}
-			// case where i == j
-			if r == c_to_cD {
-				continue
-			}
-			if s.value-u[r]-max_u > q_min {
-				break
-			}
+
 			q := s.value - u[r] - u[c_to_cD]
+
 			if q < q_min {
 				cur_i = r
 				cur_j = c_to_cD
 				q_min = q
+
 			}
 		}
 	}
-
 	return cur_i, cur_j
 }

@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"sync"
 )
 
 var NewickFlag bool = true
@@ -21,11 +22,16 @@ func initLiveRecords(D [][]float64) map[int]int {
 
 //function to initialize S matrix
 func initSmatrix(D [][]float64) [][]Tuple {
+	var wg sync.WaitGroup
+
 	n := len(D)
 	S := make([][]Tuple, n)
+	wg.Add(n)
+
 	for i := range S {
 		S[i] = make([]Tuple, n)
 	}
+
 	for i := 0; i < n; i++ {
 		for j := 0; j < n; j++ {
 			var tuple Tuple
@@ -33,14 +39,28 @@ func initSmatrix(D [][]float64) [][]Tuple {
 			tuple.index_j = j
 
 			S[i][j] = tuple
-
 		}
+
 		//sorting row in S
-		sort.Slice(S[i], func(a, b int) bool {
-			return (S[i][a].value < S[i][b].value)
-		})
+		go_i := i
+		go sort_S_row(&wg, &S[go_i])
+
 	}
+
+	wg.Wait()
+
 	return S
+}
+
+func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
+	defer wg.Done()
+	row_sort := *row
+	sort.Slice(row_sort, func(a, b int) bool {
+		return (row_sort[a].value < row_sort[b].value)
+	})
+
+	*row = row_sort
+
 }
 
 type Tuple struct {
@@ -129,6 +149,7 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 
 	//setup initial data structures for rapidNJ
 	S := initSmatrix(D)
+
 	liveRecords := initLiveRecords(D)
 	liveRecordsReverse := reverseMap(liveRecords)
 
@@ -140,7 +161,7 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	u := create_u(D)
 
 	//run rapidNJ algorithm
-	newick, tree := rapidJoinRec(D, S, labels, liveRecords, liveRecordsReverse, label_tree, tree, total_nodes, u, s_search_strategy)
+	newick, tree := rapidJoinRec(D, S, labels, liveRecords, liveRecordsReverse, label_tree, tree, total_nodes, u, s_search_strategy, -1)
 
 	return newick, tree
 
@@ -148,7 +169,7 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 
 //two Tree types. array Tree manages connection between labels and matrix while tree Tree holds all nodes (tips AND INTERNALS)
 func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[int]int, live_records_reverse map[int]int,
-	array Tree, tree Tree, total_nodes int, u []float64, s_search_strategy S_Search_Strategy) (string, Tree) {
+	array Tree, tree Tree, total_nodes int, u []float64, s_search_strategy S_Search_Strategy, row_for_next_it int) (string, Tree) {
 
 	//gets two indexes in D
 	cur_i, cur_j := s_search_strategy(u, D, S, live_records)
@@ -201,7 +222,7 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 
 	//stop maybe
 	if len(D_new) > 2 {
-		return rapidJoinRec(D_new, S_new, labels, live_records_new, live_records_reverse_new, array, tree, total_nodes, u, s_search_strategy)
+		return rapidJoinRec(D_new, S_new, labels, live_records_new, live_records_reverse_new, array, tree, total_nodes, u, s_search_strategy, row_for_next_it)
 	} else {
 		if NewickFlag {
 			newick := "(" + labels[0] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + "," + labels[1] + ":" + fmt.Sprintf("%f", D_new[0][1]/2) + ");"
@@ -274,6 +295,7 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 
 	S_new[p_j] = nil
 	S_new[p_j] = S_new[len(S_new)-1]
+	S_new[p_j] = S_new[p_j][:len(S_new[len(S_new)-1])]
 	S_new[len(S_new)-1] = nil
 	S_new = S_new[:len(S_new)-1]
 
