@@ -52,12 +52,12 @@ def plotAllTreesErrorbar():
 def plotInitialRapidnjVsUUPDATErapidnj():
     ax = plt.gca()
 
-    df_old = pd.read_csv('time_plot_canonical_vs_rapid.csv')[0:24]
-    df_new = pd.read_csv('time_plot_canonical_vs_rapid_from_u_update.csv')
+    df_old = pd.read_csv('version_1_time.csv')
+    df_new = pd.read_csv('version_3_time.csv')
 
-    plt.errorbar(df_old.taxa, np.log(df_old.rapidnj), yerr=df_old.rapidnj_error, marker='x', label = 'RapidNJ_intial_version',
+    plt.errorbar(df_old.taxa, np.log(df_old.rapidnj), yerr=df_old.rapidnj_error, marker='x', label = 'RapidNJ_v0',
                 ecolor='red', fmt='None', capsize=2)
-    plt.errorbar(df_old.taxa, np.log(df_new.rapidnj), yerr=df_new.rapidnj_error, marker='x', label = 'RapidNJ_New',
+    plt.errorbar(df_new.taxa, np.log(df_new.rapidnj), yerr=df_new.rapidnj_error, marker='x', label = 'RapidNJ_v1',
                 ecolor='blue', fmt='None', capsize=2)
     plt.legend(loc ='upper left')
 
