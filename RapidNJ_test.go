@@ -245,6 +245,13 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	time_end = time.Now().UnixMilli()
 	time_measured_rapid = time_end - time_start
 	fmt.Printf("### TIME ELAPSED: %d ms for run ###\n", time_measured_rapid)
+	fmt.Printf("### TOTAL AMOUNT OF LOOKUPS: %d ###\n", total_lookups)
+	fmt.Printf("### COLUMN UPDATES WAS FOUND ###\n")
+
+	//fmt.Println(column_depth)
+	//fmt.Println(total_updates)
+	//fmt.Println(extra_cost)
+	//fmt.Println(total)
 
 	if 1 == 2 {
 		t.Errorf("error")
