@@ -27,6 +27,9 @@ func MergeSort(data []Tuple, r chan []Tuple) {
 		r <- data
 		return
 	}
+	if len(data) <= 2048 { // Sequential
+		mergeSortSeq(data)
+	}
 
 	leftChan := make(chan []Tuple)
 	rightChan := make(chan []Tuple)
@@ -102,3 +105,45 @@ func mergeSortParallel(s []Tuple) []Tuple {
 	return s
 }
 */
+func mergeSortSeq(items []Tuple) []Tuple {
+    if len(items) < 2 {
+        return items
+    }
+    first := mergeSortSeq(items[:len(items)/2])
+    second := mergeSortSeq(items[len(items)/2:])
+    return mergeSeq(first, second)
+}
+
+func mergeSeq(a []Tuple, b []Tuple) []Tuple {
+    final := []Tuple{}
+    i := 0
+    j := 0
+    for i < len(a) && j < len(b) {
+        if a[i].value < b[j].value {
+            final = append(final, a[i])
+            i++
+        } else {
+            final = append(final, b[j])
+            j++
+        }
+    }
+    for ; i < len(a); i++ {
+        final = append(final, a[i])
+    }
+    for ; j < len(b); j++ {
+        final = append(final, b[j])
+    }
+    return final
+}
+
+func mergesortPara(s []Tuple) {
+	len := len(s)
+	res := make(chan []Tuple)
+	if len > 1 {
+		if len <= 2048 { // Sequential
+			mergeSortSeq(s)
+		} else { // Parallel
+			go MergeSort(s, res)
+		}
+	}
+}

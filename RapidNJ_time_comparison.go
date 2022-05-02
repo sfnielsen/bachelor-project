@@ -104,10 +104,10 @@ func Test_make_rapid_u_updates_CSV() {
 		mean_rapidnj := 0
 
 		iterations := 10
+		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+		fmt.Println("")
 		for j := 0; j < iterations; j++ {
 			var time_start, time_end int64
-			fmt.Println()
-			fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 
 			//make first tree
 			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution)
@@ -130,11 +130,9 @@ func Test_make_rapid_u_updates_CSV() {
 
 			//run rapidJoin and measure the time on Shifting norm
 			time_start = time.Now().UnixMilli()
-			fmt.Printf("###BEGINNING RAPIDNJ###\n")
 			rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
 			time_end = time.Now().UnixMilli()
 			time_measured_rapid := int(time_end - time_start)
-			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
 
 			mean_rapidnj += time_measured_rapid
 			//finding if time was extrema
@@ -149,7 +147,8 @@ func Test_make_rapid_u_updates_CSV() {
 		fmt.Println(highest_rapidnj, lowest_rapidnj)
 		row := []string{strconv.Itoa(i * taxavalue),
 			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
-			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2)}
+			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2),
+			fmt.Sprintf("%v", mean_rapidnj/iterations)}
 		_ = csvWriter.Write(row)
 		csvWriter.Flush()
 	}
