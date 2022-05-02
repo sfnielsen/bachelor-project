@@ -262,7 +262,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	NewickFlag = true
 	for i := 0; i < 1; i++ {
 
-		_, labels, distanceMatrix := GenerateTree(150, 40, Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(2500, 40, Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 

@@ -92,9 +92,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 			if !ok {
 				continue
 			}
-
 			q := s.value - u[r] - u[c_to_cD]
-
 			if q < q_min {
 				cur_i = r
 				cur_j = c_to_cD

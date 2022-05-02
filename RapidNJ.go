@@ -55,6 +55,7 @@ func initSmatrix(D [][]float64) [][]Tuple {
 func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
 	defer wg.Done()
 	row_sort := *row
+	//row_sort_sorted := mergeSort1(row_sort)
 	sort.Slice(row_sort, func(a, b int) bool {
 		return (row_sort[a].value < row_sort[b].value)
 	})
@@ -271,14 +272,14 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records
 func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
 	S_new := S
 	//overwrite the row p_i where we want to store merged ij
-	s_sorting_indexes := make([]string, len(S))
+	//s_sorting_indexes := make([]string, len(S))
 	for j := 0; j < len(D[p_i]); j++ {
 		var tuple Tuple
 		var result int
 
 		tuple.value = D[p_i][j]
 		result = live_records_reverse[j]
-		s_sorting_indexes[j] = convertFloatToIntString(D[p_i][j])
+		//s_sorting_indexes[j] = convertFloatToIntString(D[p_i][j])
 
 		tuple.index_j = result
 		S_new[p_i][j] = tuple
@@ -288,11 +289,14 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged
-	Sort(s_sorting_indexes)
-	fmt.Println(s_sorting_indexes)
-	sort.Slice(S_new[p_i], func(a, b int) bool {
-		return (S_new[p_i][a].value < S_new[p_i][b].value)
-	})
+	res := make(chan []Tuple)
+	go MergeSort(S_new[p_i], res)
+	r := <-res
+	S_new[p_i] = r
+	//
+	//sort.Slice(S_new[p_i], func(a, b int) bool {
+	//	return (S_new[p_i][a].value < S_new[p_i][b].value)
+	//})
 
 	//delete row in S
 	//S_new = append(S[:p_j], S[p_j+1:]...)
