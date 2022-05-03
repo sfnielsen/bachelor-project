@@ -90,16 +90,16 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 
 func Test_make_rapid_u_updates_CSV() {
 	taxavalue := 100
-	csvFile, err := os.Create("time_plot_canonical_vs_rapid_from_u_update.csv")
+	csvFile, err := os.Create("version_4_time.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
 	csvWriter := csv.NewWriter(csvFile)
 
-	label := []string{"taxa", "rapidnj", "rapidnj_error"}
+	label := []string{"taxa", "rapidnj", "rapidnj_error", "mean"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 45; i++ {
+	for i := 1; i < 61; i++ {
 		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
 		mean_rapidnj := 0
 
@@ -149,7 +149,8 @@ func Test_make_rapid_u_updates_CSV() {
 		fmt.Println(highest_rapidnj, lowest_rapidnj)
 		row := []string{strconv.Itoa(i * taxavalue),
 			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
-			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2)}
+			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2),
+			fmt.Sprintf("%v", mean_rapidnj/iterations)}
 		_ = csvWriter.Write(row)
 		csvWriter.Flush()
 	}
