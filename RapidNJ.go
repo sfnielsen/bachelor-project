@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"sort"
 	"strconv"
 	"sync"
 )
@@ -56,11 +55,17 @@ func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
 	defer wg.Done()
 	row_sort := *row
 	//row_sort_sorted := mergeSort1(row_sort)
-	sort.Slice(row_sort, func(a, b int) bool {
-		return (row_sort[a].value < row_sort[b].value)
-	})
+	res := make(chan []Tuple)
+	go ParallelQuick(row_sort, res)
+	r := <-res
+	*row = r
+	/*
+		sort.Slice(row_sort, func(a, b int) bool {
+			return (row_sort[a].value < row_sort[b].value)
+		})
 
-	*row = row_sort
+		*row = row_sort
+	*/
 
 }
 
@@ -289,15 +294,17 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged
+
 	res := make(chan []Tuple)
-	go MergeSort(S_new[p_i], res)
+	go ParallelQuick(S_new[p_i], res)
 	r := <-res
 	S_new[p_i] = r
-	//
-	//sort.Slice(S_new[p_i], func(a, b int) bool {
-	//	return (S_new[p_i][a].value < S_new[p_i][b].value)
-	//})
 
+	/*
+		sort.Slice(S_new[p_i], func(a, b int) bool {
+			return (S_new[p_i][a].value < S_new[p_i][b].value)
+		})
+	*/
 	//delete row in S
 	//S_new = append(S[:p_j], S[p_j+1:]...)
 

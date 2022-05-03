@@ -1,5 +1,11 @@
 package main
 
+import (
+	"sort"
+)
+
+var partition int
+
 func merge(a []Tuple, b []Tuple) []Tuple {
 	final := []Tuple{}
 	i := 0
@@ -45,6 +51,41 @@ func MergeSort(data []Tuple, r chan []Tuple) {
 	close(rightChan)
 	r <- merge(ldata, rdata)
 	return
+}
+
+func ParallelQuick(data []Tuple, r chan []Tuple) {
+	if len(data) == 1 {
+		r <- data
+		return
+	}
+	if len(data) <= partition { // Sequential
+		sort.Slice(data, func(a, b int) bool {
+			return (data[a].value < data[b].value)
+		})
+		r <- data
+		return
+	}
+	leftChan := make(chan []Tuple)
+	rightChan := make(chan []Tuple)
+	middle := len(data) / 2
+
+	go ParallelQuick(data[:middle], leftChan)
+	go ParallelQuick(data[middle:], rightChan)
+
+	ldata := <-leftChan
+	rdata := <-rightChan
+
+	close(leftChan)
+	close(rightChan)
+	r <- merge(ldata, rdata)
+	return
+}
+
+func Quick(data []Tuple, c chan []Tuple) {
+	sort.Slice(data, func(a, b int) bool {
+		return (data[a].value < data[b].value)
+	})
+	c <- data
 }
 
 /*
@@ -106,34 +147,34 @@ func mergeSortParallel(s []Tuple) []Tuple {
 }
 */
 func mergeSortSeq(items []Tuple) []Tuple {
-    if len(items) < 2 {
-        return items
-    }
-    first := mergeSortSeq(items[:len(items)/2])
-    second := mergeSortSeq(items[len(items)/2:])
-    return mergeSeq(first, second)
+	if len(items) < 2 {
+		return items
+	}
+	first := mergeSortSeq(items[:len(items)/2])
+	second := mergeSortSeq(items[len(items)/2:])
+	return mergeSeq(first, second)
 }
 
 func mergeSeq(a []Tuple, b []Tuple) []Tuple {
-    final := []Tuple{}
-    i := 0
-    j := 0
-    for i < len(a) && j < len(b) {
-        if a[i].value < b[j].value {
-            final = append(final, a[i])
-            i++
-        } else {
-            final = append(final, b[j])
-            j++
-        }
-    }
-    for ; i < len(a); i++ {
-        final = append(final, a[i])
-    }
-    for ; j < len(b); j++ {
-        final = append(final, b[j])
-    }
-    return final
+	final := []Tuple{}
+	i := 0
+	j := 0
+	for i < len(a) && j < len(b) {
+		if a[i].value < b[j].value {
+			final = append(final, a[i])
+			i++
+		} else {
+			final = append(final, b[j])
+			j++
+		}
+	}
+	for ; i < len(a); i++ {
+		final = append(final, a[i])
+	}
+	for ; j < len(b); j++ {
+		final = append(final, b[j])
+	}
+	return final
 }
 
 func mergesortPara(s []Tuple) {

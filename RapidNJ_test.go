@@ -223,7 +223,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	fmt.Println("...running profiling...")
 
-	taxa := 4000
+	taxa := 10000
 
 	var time_start, time_end, time_measured_rapid int64
 
@@ -262,7 +262,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	NewickFlag = true
 	for i := 0; i < 1; i++ {
 
-		_, labels, distanceMatrix := GenerateTree(2500, 40, Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(10000, 40, Normal_distribution)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 

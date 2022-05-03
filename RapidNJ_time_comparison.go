@@ -24,7 +24,7 @@ func TestRuntimeOfBigTaxas() {
 
 	fmt.Println("###GENERATING DISTANCE MATRIX")
 	time_start = time.Now().UnixMilli()
-	_, labels, distanceMatrix := GenerateTree(1000, 1000, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(10000, 1000, Normal_distribution)
 	time_end = time.Now().UnixMilli()
 	time_generateTree := time_end - time_start
 	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
@@ -99,7 +99,7 @@ func Test_make_rapid_u_updates_CSV() {
 	label := []string{"taxa", "rapidnj", "rapidnj_error", "mean"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 61; i++ {
+	for i := 54; i < 61; i++ {
 		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
 		mean_rapidnj := 0
 
@@ -144,7 +144,7 @@ func Test_make_rapid_u_updates_CSV() {
 			}
 
 		}
-		fmt.Println(highest_rapidnj, lowest_rapidnj)
+		fmt.Println(highest_rapidnj, lowest_rapidnj, mean_rapidnj/iterations)
 		row := []string{strconv.Itoa(i * taxavalue),
 			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
 			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2),
@@ -368,6 +368,57 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 	fmt.Println(U_max_heuristic_time)
 }
 
+func findBestPartition() {
+	csvFile, err := os.Create("partitiontest.csv")
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+
+	csvWriter.Write([]string{"taxa", "1000", "1500", "2000", "2500", "3000", "3600", "4000", "4500", "5000"})
+	NewickFlag = false
+
+	var time_start, time_end int64
+
+	for i := 1; i < 6; i++ {
+		fmt.Println("###GENERATING DISTANCE MATRIX")
+		time_start = time.Now().UnixMilli()
+		_, labels, distanceMatrix := GenerateTree(5000+1000*i, 1000, Normal_distribution)
+		time_end = time.Now().UnixMilli()
+		time_generateTree := time_end - time_start
+		fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
+
+		row := make([]string, 0)
+
+		row = append(row, strconv.Itoa(5000+1000*i))
+
+		for j := 1; j < 10; j++ {
+			original_labels := make([]string, len(labels))
+			copy(original_labels, labels)
+
+			original_dist_mat := make([][]float64, len(distanceMatrix))
+			for i := range distanceMatrix {
+				original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+				copy(original_dist_mat[i], distanceMatrix[i])
+			}
+
+			partition = 500 + j*500
+			fmt.Println("partition", partition)
+			fmt.Println("###BEGIN NEIGHBOR-JOINING")
+			time_start = time.Now().UnixMilli()
+			rapidNeighbourJoin(original_dist_mat, original_labels, rapidNeighborJoining)
+			time_end = time.Now().UnixMilli()
+			time_neighborJoin := int(time_end - time_start)
+			fmt.Printf("###Done in %d milliseconds\n", time_neighborJoin)
+
+			row = append(row, strconv.Itoa(time_neighborJoin))
+		}
+		_ = csvWriter.Write(row)
+		csvWriter.Flush()
+	}
+	csvFile.Close()
+}
+
 // #####################################################################################################################################
 // #####################################################################################################################################
 //helper methods
@@ -392,10 +443,6 @@ func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tr
 
 }
 
-func compare_U_max_sorting() {
-
-}
-
 func main() {
-	Test_make_rapid_u_updates_CSV()
+	findBestPartition()
 }
