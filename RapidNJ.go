@@ -253,17 +253,26 @@ func rapidJoinRec(D [][]float64, S [][]Tuple, labels []string, live_records map[
 func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records_reverse map[int]int,
 	D [][]float64, p_i int, p_j int, new_map_key int) ([][]float64, [][]Tuple, map[int]int, map[int]int) {
 
-	//update D
-	D_new := update_D(D, p_i, p_j)
+	ch_D := make(chan [][]float64)
+	ch_lrr := make(chan map[int]int)
+	ch_lr := make(chan map[int]int)
 
-	//Overwrite live records
-	live_records = update_live_records(live_records, p_i, p_j, new_map_key)
+	//update D
+	go update_D(D, p_i, p_j, ch_D)
 
 	//allow quicker lookups when updating S
-	live_records_reverse = update_live_records_reverse(live_records_reverse, p_i, p_j, new_map_key)
+	go update_live_records_reverse(live_records_reverse, p_i, p_j, new_map_key, ch_lrr)
+
+	//Overwrite live records
+	go update_live_records(live_records, p_i, p_j, new_map_key, ch_lr)
+
+	D_new := <-ch_D
+	live_records_reverse = <-ch_lrr
 
 	//update S
 	S_new := update_S(S, D, p_i, p_j, live_records_reverse)
+
+	live_records = <-ch_lr
 
 	return D_new, S_new, live_records, live_records_reverse
 }
@@ -302,7 +311,7 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	return S_new
 }
 
-func update_D(D [][]float64, p_i int, p_j int) [][]float64 {
+func update_D(D [][]float64, p_i int, p_j int, ch chan [][]float64) {
 
 	//update i rows/cols
 	D = update_row_col_i(D, p_i, p_j)
@@ -310,7 +319,7 @@ func update_D(D [][]float64, p_i int, p_j int) [][]float64 {
 	//remove j rows/cols
 	D = update_row_col_j(D, p_j)
 
-	return D
+	ch <- D
 }
 
 func update_row_col_i(D [][]float64, p_i int, p_j int) [][]float64 {
@@ -352,7 +361,7 @@ func update_row_col_j(D [][]float64, p_j int) [][]float64 {
 	return D
 }
 
-func update_live_records(live_records map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+func update_live_records(live_records map[int]int, p_i int, p_j int, new_map_key int, ch chan map[int]int) {
 
 	var last_k, last_v int
 
@@ -382,10 +391,10 @@ func update_live_records(live_records map[int]int, p_i int, p_j int, new_map_key
 	}
 	live_records[new_map_key] = p_i
 
-	return live_records
+	ch <- live_records
 }
 
-func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j int, new_map_key int) map[int]int {
+func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j int, new_map_key int, ch chan map[int]int) {
 
 	//for x := p_j + 1; x < len(live_records_reverse); x++ {
 	//	live_records_reverse[x-1] = live_records_reverse[x]
@@ -396,7 +405,7 @@ func update_live_records_reverse(live_records_reverse map[int]int, p_i int, p_j 
 	delete(live_records_reverse, len(live_records_reverse)-1)
 	//delete(live_records_reverse, len(live_records_reverse)-1)
 
-	return live_records_reverse
+	ch <- live_records_reverse
 }
 
 func reverseMap(m map[int]int) map[int]int {
