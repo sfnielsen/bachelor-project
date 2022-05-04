@@ -21,7 +21,7 @@ func initLiveRecords(D [][]float64) map[int]int {
 }
 
 //function to initialize S matrix
-func initSmatrix(D [][]float64) [][]Tuple {
+func initSmatrix(D [][]float64, ch chan [][]Tuple) {
 	var wg sync.WaitGroup
 
 	n := len(D)
@@ -49,7 +49,7 @@ func initSmatrix(D [][]float64) [][]Tuple {
 
 	wg.Wait()
 
-	return S
+	ch <- S
 }
 
 func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
@@ -148,7 +148,8 @@ func generateTreeForRapidNJ(labels []string) Tree {
 func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Search_Strategy) (string, Tree) {
 
 	//setup initial data structures for rapidNJ
-	S := initSmatrix(D)
+	ch_S := make(chan [][]Tuple)
+	go initSmatrix(D, ch_S)
 
 	liveRecords := initLiveRecords(D)
 	liveRecordsReverse := reverseMap(liveRecords)
@@ -156,9 +157,11 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 	var tree Tree
 	tree = append(tree, label_tree...)
-	total_nodes := len(S) - 1
 
 	u := create_u(D)
+
+	S := <-ch_S
+	total_nodes := len(S) - 1
 
 	//run rapidNJ algorithm
 	newick, tree := rapidJoinRec(D, S, labels, liveRecords, liveRecordsReverse, label_tree, tree, total_nodes, u, s_search_strategy, -1)

@@ -298,15 +298,18 @@ func test_all_trees_on_rapidNj() {
 		row = append(row, strconv.Itoa(int((float64(i * taxavalue)))))
 		errors_row := make([]string, 0)
 
+		seed := int64(7102)
 		for _, treeType := range treeTypes {
+			seed++
 			mean_rapidnj, highest_rapidnj, lowest_rapidnj := 0, 0, 99999999999999999
 			itrsize := 10
 			fmt.Printf(treeType)
 			fmt.Printf("###BEGINNING RAPIDNJ###\n")
 			for j := 0; j < itrsize; j++ {
 
-				_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
+				//_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
 
+				_, labels, distanceMatrix := GenerateTree(i, taxavalue, treeType, seed)
 				//run rapidJoin and measure the time on Shifting norm
 
 				time_start = time.Now().UnixMilli()
@@ -379,6 +382,8 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 // #####################################################################################################################################
 // #####################################################################################################################################
 //helper methods
+
+/*
 func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree, Tree) {
 	S := initSmatrix(D)
 	deadRecords := initLiveRecords(D)
@@ -388,8 +393,9 @@ func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree
 	tree = append(tree, label_tree...)
 
 	return S, deadRecords, label_tree, tree
-}
+}*/
 
+/*
 func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tree, Tree, [][]float64,
 	[]string, [][]Tuple, map[int]int) {
 	seed := time.Now().UTC().UnixNano()
@@ -400,7 +406,7 @@ func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tr
 	return array, tree, distanceMatrix, labels, S, live_records
 
 }
-
+*/
 func compare_U_max_sorting() {
 
 }

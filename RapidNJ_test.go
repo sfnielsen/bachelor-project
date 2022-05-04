@@ -239,10 +239,9 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	var time_start, time_end, time_measured_rapid int64
 
 	NewickFlag = true
-	seed := time.Now().UTC().UnixNano()
-
+	//seed := time.Now().UTC().UnixNano()
+	seed := int64(6969)
 	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution, seed)
-
 	time_start = time.Now().UnixMilli()
 	f, err := os.Create("cpu.prof")
 	if err != nil {
