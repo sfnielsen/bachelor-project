@@ -20,7 +20,8 @@ import (
 //####################################################################################
 
 func TestMakeTree(t *testing.T) {
-	a, b, c := GenerateTree(5, 3, Uniform_distribution)
+	seed := time.Now().UTC().UnixNano()
+	a, b, c := GenerateTree(5, 3, Uniform_distribution, seed)
 
 	if a == nil || b == nil || c == nil {
 		t.Errorf("not good")
@@ -31,10 +32,10 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 	prev_time := int64(0)
 	quadratic := .0
 	for i := 0; i < 5; i++ {
-
+		seed := time.Now().UTC().UnixNano()
 		taxa_amount := int(math.Pow(2, float64(i))) // power of 2
 		time_start := time.Now().UnixMilli()
-		GenerateTree(taxa_amount, 1, Normal_distribution)
+		GenerateTree(taxa_amount, 1, Normal_distribution, seed)
 		time_end := time.Now().UnixMilli()
 		time := time_end - time_start
 
@@ -47,9 +48,9 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 }
 
 func Test_Generated_Tree(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
+	seed := time.Now().UnixNano()
 	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := GenerateTree(taxa_amount, 5, Normal_distribution)
+	tree, _, array := GenerateTree(taxa_amount, 5, Normal_distribution, seed)
 
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
@@ -108,11 +109,12 @@ func Test_Generated_Tree(t *testing.T) {
 func Test_Split_Distance(t *testing.T) {
 	iterations := 50
 	results := make(map[int]float64)
+	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < iterations; i++ {
 
 		//GENERATE 2 TREES
-		tree1, _, _ := GenerateTree(5, 15, Normal_distribution)
-		tree2, _, _ := GenerateTree(5, 15, Normal_distribution)
+		tree1, _, _ := GenerateTree(5, 15, Normal_distribution, seed)
+		tree2, _, _ := GenerateTree(5, 15, Normal_distribution, seed+1)
 
 		//CHECK TREES
 		results[Split_Distance(tree1[0], tree2[2])]++
@@ -124,21 +126,27 @@ func Test_Split_Distance(t *testing.T) {
 
 	//WE EXPECT 1/15 OF RANDOM 5-tip TREES TO BE TOPOLOGICALLY IDENTICAL
 	test := math.Abs(results[0] - float64(1)/float64(15))
-	if test > 0.05 {
+	if test > 0.1 {
 		t.Errorf("Expect 1/15 good trees, %f", test)
 	}
 
 	//CHECK THAT BIGGER TREES DO NOT RANDOMLY MAKE THE SAME TREE
 	for i := 0; i < (iterations / 5); i++ {
 
-		//GENERATE 2 TREES
-		tree1, _, _ := GenerateTree(50, 15, Normal_distribution)
-		tree2, _, _ := GenerateTree(50, 15, Normal_distribution)
+		//GENERATE 3 TREES
+		tree1, _, _ := GenerateTree(50, 15, Normal_distribution, seed)
+		tree2, _, _ := GenerateTree(50, 15, Normal_distribution, seed+1)
+
+		tree1_identical, _, _ := GenerateTree(50, 15, Normal_distribution, seed)
 
 		//CHECK TREES
 		result := Split_Distance(tree1[0], tree2[2])
 		if result == 0 {
 			t.Errorf("Unlikely scenario - Big trees not expected to randomly be identical")
+		}
+		result2 := Split_Distance(tree1[0], tree1_identical[2])
+		if result2 != 0 {
+			t.Error("These two trees should have distance 0 - eg. being the same")
 		}
 	}
 }
@@ -146,11 +154,12 @@ func Test_Split_Distance(t *testing.T) {
 func Test_Split_Distance_fails(t *testing.T) {
 
 	taxa := 100
-	_, labels1, distanceMatrix1 := GenerateTree(taxa/2, 15, Normal_distribution)
+	seed := time.Now().UTC().UnixNano()
+	_, labels1, distanceMatrix1 := GenerateTree(taxa/2, 15, Normal_distribution, seed)
 
 	//trees have different amount of taxas such that all splits beocome different
 
-	_, labels2, distanceMatrix2 := GenerateTree(taxa, 15, Normal_distribution)
+	_, labels2, distanceMatrix2 := GenerateTree(taxa, 15, Normal_distribution, seed)
 
 	//_, _, array, tree := standardSetup(distanceMatrix1, labels1)
 	_, canon_tree := neighborJoin(distanceMatrix1, labels1)
@@ -194,8 +203,10 @@ func Test4Taxa(t *testing.T) {
 }
 
 func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
+	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(100, 5, Uniform_distribution)
+		seed++
+		_, labels, distanceMatrix := GenerateTree(100, 5, Uniform_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -228,7 +239,9 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	var time_start, time_end, time_measured_rapid int64
 
 	NewickFlag = true
-	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution)
+	seed := time.Now().UTC().UnixNano()
+
+	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution, seed)
 
 	time_start = time.Now().UnixMilli()
 	f, err := os.Create("cpu.prof")
@@ -260,9 +273,10 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 
 func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	NewickFlag = true
+	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 1; i++ {
-
-		_, labels, distanceMatrix := GenerateTree(500, 40, Normal_distribution)
+		seed++
+		_, labels, distanceMatrix := GenerateTree(1500, 40, Normal_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -303,8 +317,10 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 }
 
 func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
+	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution)
+		seed++
+		_, labels, distanceMatrix := GenerateTree(20, 15, Normal_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 
@@ -331,7 +347,8 @@ func TestCanonicalNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *testing.T) {
-	_, labels, distanceMatrix := GenerateTree(500, 15, Normal_distribution)
+	seed := time.Now().UTC().UnixNano()
+	_, labels, distanceMatrix := GenerateTree(500, 15, Normal_distribution, seed)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -390,8 +407,10 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 }
 
 func TestUMAXheuristic(t *testing.T) {
+	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(20, 15, Uniform_distribution)
+		seed++
+		_, labels, distanceMatrix := GenerateTree(20, 15, Uniform_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 

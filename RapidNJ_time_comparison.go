@@ -23,8 +23,9 @@ func TestRuntimeOfBigTaxas() {
 	var time_start, time_end int64
 
 	fmt.Println("###GENERATING DISTANCE MATRIX")
+	seed := time.Now().UTC().UnixNano()
 	time_start = time.Now().UnixMilli()
-	_, labels, distanceMatrix := GenerateTree(1000, 1000, Normal_distribution)
+	_, labels, distanceMatrix := GenerateTree(1000, 1000, Normal_distribution, seed)
 	time_end = time.Now().UnixMilli()
 	time_generateTree := time_end - time_start
 	fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
@@ -44,8 +45,8 @@ func TestRuntimeOfBigTaxas() {
 func Test_Compare_runtimes_canonical_against_rapid() {
 	var time_start, time_end int64
 	var time_measured int
-
-	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution)
+	seed := time.Now().UTC().UnixNano()
+	_, labels, distanceMatrix := GenerateTree(1000, 15, Normal_distribution, seed)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -104,13 +105,15 @@ func Test_make_rapid_u_updates_CSV() {
 		mean_rapidnj := 0
 
 		iterations := 10
+		seed := time.Now().UTC().UnixNano()
 		for j := 0; j < iterations; j++ {
+			seed++
 			var time_start, time_end int64
 			fmt.Println()
 			fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 
 			//make first tree
-			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution)
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution, seed)
 			original_labels := make([]string, len(labels))
 			copy(original_labels, labels)
 			original_dist_mat := make([][]float64, len(distanceMatrix))
@@ -173,13 +176,15 @@ func Test_Make_Time_Taxa_CSV() {
 		mean_rapidnj, mean_canonical := 0, 0
 
 		iterations := 10
+		seed := int64(29638)
 		for j := 0; j < iterations; j++ {
+			seed++
 			var time_start, time_end int64
 			fmt.Println()
 			fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 
 			//make first tree
-			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution)
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution, seed)
 			original_labels := make([]string, len(labels))
 			copy(original_labels, labels)
 			original_dist_mat := make([][]float64, len(distanceMatrix))
@@ -191,7 +196,7 @@ func Test_Make_Time_Taxa_CSV() {
 			//_, _, array, tree := standardSetup(distanceMatrix, labels)
 
 			//make second tree tree
-			_, labels2, distanceMatrixUni := GenerateTree(i*taxavalue, 15, Uniform_distribution)
+			_, labels2, distanceMatrixUni := GenerateTree(i*taxavalue, 15, Uniform_distribution, seed)
 			original_labels2 := make([]string, len(labels2))
 			copy(original_labels2, labels2)
 
@@ -333,7 +338,8 @@ func test_all_trees_on_rapidNj() {
 }
 
 func compare_runtime_on_umax_vs_normal_rapidnj() {
-	_, labels, distanceMatrix := GenerateTree(1500, 15, Cluster_Normal_Distribution)
+	seed := time.Now().UTC().UnixNano()
+	_, labels, distanceMatrix := GenerateTree(1500, 15, Cluster_Normal_Distribution, seed)
 	original_labels := make([]string, len(labels))
 	copy(original_labels, labels)
 
@@ -386,7 +392,8 @@ func standardSetup(D [][]float64, labels []string) ([][]Tuple, map[int]int, Tree
 
 func setupDistanceMatrixForTimeTaking(i int, taxavalue int, treeType string) (Tree, Tree, [][]float64,
 	[]string, [][]Tuple, map[int]int) {
-	tree, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, treeType)
+	seed := time.Now().UTC().UnixNano()
+	tree, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, treeType, seed)
 
 	S, live_records, array, _ := standardSetup(distanceMatrix, labels)
 

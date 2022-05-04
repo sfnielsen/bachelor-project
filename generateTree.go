@@ -4,7 +4,6 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
-	"time"
 )
 
 //Edge is a structure stored in a Node. It keeps tracks of the distance and a destination Node (different from the Node it is stored in)
@@ -28,7 +27,7 @@ func remove(slice []*Node, s int) []*Node {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func GenerateTree(size int, max_length_random int, distance_generator string) (Tree, []string, [][]float64) {
+func GenerateTree(size int, max_length_random int, distance_generator string, seed int64) (Tree, []string, [][]float64) {
 	array := generateArray(size)
 	tree := make(Tree, 0)
 
@@ -47,7 +46,7 @@ func GenerateTree(size int, max_length_random int, distance_generator string) (T
 		tree = append(tree, value)
 	}
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.Seed(seed)
 
 	for len(array) > 1 {
 		random_x := rand.Intn(len(array))
