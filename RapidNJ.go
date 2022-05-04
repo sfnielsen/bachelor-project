@@ -21,7 +21,7 @@ func initLiveRecords(D [][]float64) map[int]int {
 }
 
 //function to initialize S matrix
-func initSmatrix(D [][]float64, ch chan [][]Tuple) {
+func initSmatrix(D [][]float64) [][]Tuple {
 	var wg sync.WaitGroup
 
 	n := len(D)
@@ -49,15 +49,13 @@ func initSmatrix(D [][]float64, ch chan [][]Tuple) {
 
 	wg.Wait()
 
-	ch <- S
+	return S
 }
 
 func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
 	defer wg.Done()
 	row_sort := *row
-	sort.Slice(row_sort, func(a, b int) bool {
-		return (row_sort[a].value < row_sort[b].value)
-	})
+	sort.Sort(ByValue(row_sort))
 
 	*row = row_sort
 
@@ -72,6 +70,12 @@ type U_Tuple struct {
 	value      float64
 	index_in_d int
 }
+
+type ByValue []Tuple
+
+func (a ByValue) Len() int           { return len(a) }
+func (a ByValue) Less(i, j int) bool { return a[i].value < a[j].value }
+func (a ByValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func MaxIntSlice(v []float64) (m float64) {
 	m = -math.MaxFloat64
@@ -148,8 +152,7 @@ func generateTreeForRapidNJ(labels []string) Tree {
 func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Search_Strategy) (string, Tree) {
 
 	//setup initial data structures for rapidNJ
-	ch_S := make(chan [][]Tuple)
-	go initSmatrix(D, ch_S)
+	S := initSmatrix(D)
 
 	liveRecords := initLiveRecords(D)
 	liveRecordsReverse := reverseMap(liveRecords)
@@ -157,11 +160,9 @@ func rapidNeighbourJoin(D [][]float64, labels []string, s_search_strategy S_Sear
 	var label_tree Tree = generateTreeForRapidNJ(labels)
 	var tree Tree
 	tree = append(tree, label_tree...)
+	total_nodes := len(S) - 1
 
 	u := create_u(D)
-
-	S := <-ch_S
-	total_nodes := len(S) - 1
 
 	//run rapidNJ algorithm
 	newick, tree := rapidJoinRec(D, S, labels, liveRecords, liveRecordsReverse, label_tree, tree, total_nodes, u, s_search_strategy, -1)
@@ -298,9 +299,7 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged row
-	sort.Slice(S_new[p_i], func(a, b int) bool {
-		return (S_new[p_i][a].value < S_new[p_i][b].value)
-	})
+	sort.Sort(ByValue(S_new[p_i]))
 
 	//delete row in S
 	//S_new = append(S[:p_j], S[p_j+1:]...)
