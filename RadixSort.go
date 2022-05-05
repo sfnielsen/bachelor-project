@@ -16,17 +16,14 @@ import (
 	"unsafe"
 )
 
-func convertFloatToIntString(n float64) string {
-	s := fmt.Sprintf("%f", n)
-	sizeOfFloat := strings.Index(s, ".")
-	fmt.Println(sizeOfFloat)
+func removeDot(s string) string {
 	t := strings.Replace(s, ".", "", -1)
-	t = firstN(t, 5+sizeOfFloat)
 	return t
 }
 
-func convertIntStringBackToFloat(n string) {
-	
+func addDot(n string) string {
+	q := n[:len(n)-2] + "." + n[len(n)-2:]
+	return q
 }
 
 func firstN(s string, n int) string {
@@ -34,6 +31,48 @@ func firstN(s string, n int) string {
 		return s[:n]
 	}
 	return s
+}
+
+func radixSortTupleArray(row []Tuple) []Tuple {
+	placementMap := make(map[string]int)
+	stringRowToBeSorted := make([]string, len(row))
+	for i, v := range row {
+		s := fmt.Sprintf("%.2f", v.value)
+		placementMap[s] = i
+		stringRowToBeSorted[i] = removeDot(s)
+	}
+
+	Sort(stringRowToBeSorted)
+
+	finalRow := make([]Tuple, len(row))
+	second := make([]Tuple, 0)
+	second_active := false
+	prev := ""
+	for i, v := range stringRowToBeSorted {
+		if !second_active {
+			if len(v) < len(prev) {
+				second_active = true
+			}
+		} else {
+			if len(v) < len(prev) {
+				second = append([]Tuple{finalRow[0]}, second...)
+				finalRow = append(second, finalRow[1:]...)
+				second = []Tuple{}
+			}
+		}
+		if second_active {
+			second = append(second, row[placementMap[addDot(v)]])
+			if i == len(stringRowToBeSorted)-1 {
+				second = append([]Tuple{finalRow[0]}, second...)
+				finalRow = append(second, finalRow[1:len(finalRow)-len(second)+1]...)
+				second = []Tuple{}
+			}
+		} else {
+			finalRow[i] = row[placementMap[addDot(v)]]
+		}
+		prev = v
+	}
+	return finalRow
 }
 
 // Sort sorts a slice of strings in increasing byte-wise lexicographic order.

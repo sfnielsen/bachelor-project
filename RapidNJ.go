@@ -55,10 +55,12 @@ func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
 	defer wg.Done()
 	row_sort := *row
 	//row_sort_sorted := mergeSort1(row_sort)
-	res := make(chan []Tuple)
-	go ParallelQuick(row_sort, res)
-	r := <-res
-	*row = r
+	/*
+		res := make(chan []Tuple)
+		go ParallelQuick(row_sort, res)
+		r := <-res
+	*/
+	*row = radixSortTupleArray(row_sort)
 	/*
 		sort.Slice(row_sort, func(a, b int) bool {
 			return (row_sort[a].value < row_sort[b].value)
@@ -294,12 +296,14 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged
+	S_new[p_i] = radixSortTupleArray(S_new[p_i])
 
-	res := make(chan []Tuple)
-	go ParallelQuick(S_new[p_i], res)
-	r := <-res
-	S_new[p_i] = r
-
+	/*
+		res := make(chan []Tuple)
+		go ParallelQuick(S_new[p_i], res)
+		r := <-res
+		S_new[p_i] = r
+	*/
 	/*
 		sort.Slice(S_new[p_i], func(a, b int) bool {
 			return (S_new[p_i][a].value < S_new[p_i][b].value)

@@ -369,13 +369,13 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 }
 
 func findBestPartition() {
-	csvFile, err := os.Create("partitiontest.csv")
+	csvFile, err := os.Create("blub.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
 	csvWriter := csv.NewWriter(csvFile)
 
-	csvWriter.Write([]string{"taxa", "1000", "1500", "2000", "2500", "3000", "3600", "4000", "4500", "5000"})
+	csvWriter.Write([]string{"taxa", "6000", "7000", "8000", "9000", "10000"})
 	NewickFlag = false
 
 	var time_start, time_end int64
@@ -383,7 +383,7 @@ func findBestPartition() {
 	for i := 1; i < 6; i++ {
 		fmt.Println("###GENERATING DISTANCE MATRIX")
 		time_start = time.Now().UnixMilli()
-		_, labels, distanceMatrix := GenerateTree(5000+1000*i, 1000, Normal_distribution)
+		_, labels, distanceMatrix := GenerateTree(1000*i, 1000, Normal_distribution)
 		time_end = time.Now().UnixMilli()
 		time_generateTree := time_end - time_start
 		fmt.Printf("###Done in %d milliseconds\n", time_generateTree)
@@ -392,7 +392,7 @@ func findBestPartition() {
 
 		row = append(row, strconv.Itoa(5000+1000*i))
 
-		for j := 1; j < 10; j++ {
+		for j := 1; j < 6; j++ {
 			original_labels := make([]string, len(labels))
 			copy(original_labels, labels)
 
@@ -402,7 +402,7 @@ func findBestPartition() {
 				copy(original_dist_mat[i], distanceMatrix[i])
 			}
 
-			partition = 500 + j*500
+			partition = 5000 + j*1000
 			fmt.Println("partition", partition)
 			fmt.Println("###BEGIN NEIGHBOR-JOINING")
 			time_start = time.Now().UnixMilli()
