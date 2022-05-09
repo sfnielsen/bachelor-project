@@ -66,7 +66,7 @@ var start, end, total int64
 
 var lookup_updates_count = false
 
-const taxa_lookup_update = 30
+const taxa_lookup_update = 40
 
 var lookup_matrix = make([][]int, taxa_lookup_update)
 var update_matrix = make([][]int, taxa_lookup_update)

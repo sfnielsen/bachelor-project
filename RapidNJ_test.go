@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"math"
 	"math/rand"
 	"os"
 	"runtime/pprof"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -232,8 +234,26 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_create_accessed_matrix(t *testing.T) {
+	csvFile, err := os.Create("s_lookup_analysis.csv")
+	csvFile1, err1 := os.Create("s_update_analysis.csv")
+	if err != nil && err1 != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+	csvWriter1 := csv.NewWriter(csvFile1)
+
+	label := []string{}
+
 	seed := int64(19192)
 	taxa := taxa_lookup_update
+
+	for i := 1; i < taxa; i++ {
+		label = append(label, strconv.Itoa(i))
+	}
+	csvWriter.Write(label)
+	csvWriter.Flush()
+	csvWriter1.Write(label)
+	csvWriter1.Flush()
 
 	lookup_updates_count = true
 	for i := 0; i < len(lookup_matrix); i++ {
@@ -247,12 +267,28 @@ func Test_create_accessed_matrix(t *testing.T) {
 
 		seed++
 	}
-	for _, row := range lookup_matrix {
-		fmt.Println(row)
+	row_to_append := []string{}
+	for i, row := range lookup_matrix {
+		if i == 0 {
+			continue
+		}
+		row_to_append = []string{}
+		for _, v := range row {
+			row_to_append = append(row_to_append, strconv.Itoa(v))
+		}
+		_ = csvWriter.Write(row_to_append)
+		csvWriter.Flush()
 	}
-	fmt.Println()
-	for _, row := range update_matrix {
-		fmt.Println(row)
+	for i, row := range update_matrix {
+		if i == 0 {
+			continue
+		}
+		row_to_append = []string{}
+		for _, v := range row {
+			row_to_append = append(row_to_append, strconv.Itoa(v))
+		}
+		_ = csvWriter1.Write(row_to_append)
+		csvWriter1.Flush()
 	}
 
 }

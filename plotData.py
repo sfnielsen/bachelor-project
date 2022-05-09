@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+
 
 def plotData():
     ax = plt.gca()
@@ -66,4 +68,13 @@ def plotInitialRapidnjVsUUPDATErapidnj():
 
     plt.show()
 
-plotInitialRapidnjVsUUPDATErapidnj()
+def plotHeatMap():
+    dataframe = pd.read_csv('s_update_analysis.csv')
+    nparray = dataframe.to_numpy()
+    plt.xlabel("column # in S")
+    plt.ylabel("row # in S")
+    plt.imshow(nparray, cmap='hot', interpolation='nearest')
+    plt.show()
+
+
+plotHeatMap()
