@@ -51,9 +51,9 @@ func Test_max_taxa_of_generated_tree(t *testing.T) {
 
 func Test_Generated_Tree(t *testing.T) {
 	seed := time.Now().UnixNano()
-	taxa_amount := 51 + rand.Intn(51) //between 50 and 100
-	tree, _, array := GenerateTree(taxa_amount, 5, Normal_distribution, seed)
-
+	taxa_amount := 50 + rand.Intn(51) //between 50 and 100
+	tree, _, array := GenerateTree(taxa_amount, 5, Cluster_Normal_Distribution, seed)
+	NewickFlag = true
 	//check if transposed distance matrix equals the distance matrix
 	for i := range array {
 		for j := range array {
@@ -234,8 +234,8 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_create_accessed_matrix(t *testing.T) {
-	csvFile, err := os.Create("s_lookup_analysis.csv")
-	csvFile1, err1 := os.Create("s_update_analysis.csv")
+	csvFile, err := os.Create("s_clus_lookup_analysis.csv")
+	csvFile1, err1 := os.Create("s_clus_update_analysis.csv")
 	if err != nil && err1 != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -262,9 +262,8 @@ func Test_create_accessed_matrix(t *testing.T) {
 	}
 
 	for i := 0; i < 100; i++ {
-		_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution, seed)
+		_, labels, distanceMatrix := GenerateTree(taxa, 20, Cluster_Normal_Distribution, seed)
 		rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
-
 		seed++
 	}
 	row_to_append := []string{}
@@ -302,7 +301,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	NewickFlag = true
 	//seed := time.Now().UTC().UnixNano()
 	seed := int64(6969)
-	_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution, seed)
+	_, labels, distanceMatrix := GenerateTree(taxa, 15, Spike_Normal_distribution, seed)
 	time_start = time.Now().UnixMilli()
 	f, err := os.Create("cpu.prof")
 	if err != nil {
@@ -336,7 +335,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 1; i++ {
 		seed++
-		_, labels, distanceMatrix := GenerateTree(1500, 40, Normal_distribution, seed)
+		_, labels, distanceMatrix := GenerateTree(300, 40, Spike_Normal_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 

@@ -68,13 +68,25 @@ def plotInitialRapidnjVsUUPDATErapidnj():
 
     plt.show()
 
-def plotHeatMap():
-    dataframe = pd.read_csv('s_update_analysis.csv')
+def plotHeatMap(name):
+    dataframe = pd.read_csv(name)
     nparray = dataframe.to_numpy()
     plt.xlabel("column # in S")
     plt.ylabel("row # in S")
     plt.imshow(nparray, cmap='hot', interpolation='nearest')
     plt.show()
 
+def findTotalLookups():
+    spike = pd.read_csv('s_update_analysis.csv')
+    nparray = spike.to_numpy()
+    sum = nparray.sum()
+    print("spike sum: ", sum)
 
-plotHeatMap()
+    clust = pd.read_csv('s_clus_update_analysis.csv')
+    nparray_clust = clust.to_numpy()
+    print(nparray_clust)
+    sum1 = nparray_clust.sum()
+    print("clust sum: ", sum1)
+findTotalLookups()
+plotHeatMap('s_clus_update_analysis.csv')
+plotHeatMap('s_update_analysis.csv')
