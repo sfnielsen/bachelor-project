@@ -292,6 +292,7 @@ func Test_create_accessed_matrix(t *testing.T) {
 
 }
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
+	lookup_updates_count = false
 	fmt.Println("...running profiling...")
 
 	taxa := 4000
