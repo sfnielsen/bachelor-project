@@ -64,6 +64,13 @@ var last_q_min float64 = math.MaxFloat64
 
 var start, end, total int64
 
+var lookup_updates_count = false
+
+const taxa_lookup_update = 30
+
+var lookup_matrix = make([][]int, taxa_lookup_update)
+var update_matrix = make([][]int, taxa_lookup_update)
+
 //####################################
 //####################################
 //####################################
@@ -78,6 +85,10 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 
 			if c == 0 {
 				continue
+			}
+
+			if lookup_updates_count && len(D) == taxa_lookup_update {
+				lookup_matrix[r][c]++
 			}
 
 			s := S[r][c]
@@ -96,6 +107,9 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 			q := s.value - u[r] - u[c_to_cD]
 
 			if q < q_min {
+				if lookup_updates_count && len(D) == taxa_lookup_update {
+					update_matrix[r][c]++
+				}
 				cur_i = r
 				cur_j = c_to_cD
 				q_min = q

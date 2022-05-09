@@ -231,6 +231,31 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 
 }
 
+func Test_create_accessed_matrix(t *testing.T) {
+	seed := int64(19192)
+	taxa := taxa_lookup_update
+
+	lookup_updates_count = true
+	for i := 0; i < len(lookup_matrix); i++ {
+		lookup_matrix[i] = make([]int, len(lookup_matrix))
+		update_matrix[i] = make([]int, len(lookup_matrix))
+	}
+
+	for i := 0; i < 100; i++ {
+		_, labels, distanceMatrix := GenerateTree(taxa, 15, Normal_distribution, seed)
+		rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
+
+		seed++
+	}
+	for _, row := range lookup_matrix {
+		fmt.Println(row)
+	}
+	fmt.Println()
+	for _, row := range update_matrix {
+		fmt.Println(row)
+	}
+
+}
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	fmt.Println("...running profiling...")
 
