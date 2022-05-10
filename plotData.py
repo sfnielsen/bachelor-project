@@ -88,5 +88,6 @@ def findTotalLookups():
     sum1 = nparray_clust.sum()
     print("clust sum: ", sum1)
 findTotalLookups()
-plotHeatMap('s_clus_update_analysis.csv')
-plotHeatMap('s_update_analysis.csv')
+plotHeatMap('s_clus_lookup_analysis.csv')
+plotHeatMap('s_lookup_analysis.csv')
+plotHeatMap('s_norm_lookup_analysis.csv')
