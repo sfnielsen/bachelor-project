@@ -66,4 +66,33 @@ def plotInitialRapidnjVsUUPDATErapidnj():
 
     plt.show()
 
-plotInitialRapidnjVsUUPDATErapidnj()
+def plotScatter():
+    array = pd.read_csv('cluster_bigmax.csv')
+    xs = array.iloc[:, 0].to_list()
+    ys = array.iloc[:,1:]
+    for i in range(0,len(ys)):
+        for j in range(0,len(ys.iloc[0])):
+            plt.scatter(xs[i], np.log(ys.iloc[i,j]), marker='.', color='blue')
+
+    plt.scatter(xs[len(ys)-1], np.log(ys.iloc[len(ys)-1,len(ys.iloc[0])-1]), marker='.', color='blue',label="Cluster")
+
+    array1 = pd.read_csv('spike_bigmax.csv')
+    xs1 = array1.iloc[:, 0].to_list()
+    ys1 = array1.iloc[:,1:]
+    for i in range(0,len(ys1)):
+        for j in range(0,len(ys1.iloc[0])):
+            plt.scatter(xs1[i], np.log(ys1.iloc[i,j]), marker='.', color='red')
+
+    plt.scatter(xs1[i], np.log(ys1.iloc[i,j]), marker='.', color='red', label='Spike')
+
+
+    df_new = pd.read_csv('version_5_time.csv')
+    plt.errorbar(df_new.taxa, np.log(df_new.rapidnj), yerr=df_new.rapidnj_error, marker='x', label = 'RapidNJ_v5',
+                ecolor='green', fmt='None', capsize=2)
+    plt.legend(loc ='upper left')
+    plt.xlabel("# taxa")
+    plt.ylabel("Waittime in MS (ln scale)")
+
+    plt.show()
+
+plotScatter()

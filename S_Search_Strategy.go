@@ -72,10 +72,8 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 	max_u := MaxIntSlice(u)
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
-
 	for r, row := range S {
 		for c := range row {
-
 			if c == 0 {
 				continue
 			}

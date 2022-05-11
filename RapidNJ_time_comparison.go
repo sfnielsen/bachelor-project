@@ -88,10 +88,9 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 	fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured)
 
 }
-
 func Test_make_rapid_u_updates_CSV() {
 	taxavalue := 100
-	csvFile, err := os.Create("version_4_time.csv")
+	csvFile, err := os.Create("cluster_time.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -105,15 +104,14 @@ func Test_make_rapid_u_updates_CSV() {
 		mean_rapidnj := 0
 
 		iterations := 10
-		seed := time.Now().UTC().UnixNano()
+		seed := int64(2345)
+		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 		for j := 0; j < iterations; j++ {
 			seed++
 			var time_start, time_end int64
-			fmt.Println()
-			fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
 
 			//make first tree
-			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 15, Uniform_distribution, seed)
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 100, Cluster_Normal_Distribution, seed)
 			original_labels := make([]string, len(labels))
 			copy(original_labels, labels)
 			original_dist_mat := make([][]float64, len(distanceMatrix))
@@ -133,11 +131,10 @@ func Test_make_rapid_u_updates_CSV() {
 
 			//run rapidJoin and measure the time on Shifting norm
 			time_start = time.Now().UnixMilli()
-			fmt.Printf("###BEGINNING RAPIDNJ###\n")
+
 			rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
 			time_end = time.Now().UnixMilli()
 			time_measured_rapid := int(time_end - time_start)
-			fmt.Printf("### TIME ELAPSED: %d ms\n", time_measured_rapid)
 
 			mean_rapidnj += time_measured_rapid
 			//finding if time was extrema
@@ -149,12 +146,70 @@ func Test_make_rapid_u_updates_CSV() {
 			}
 
 		}
+		fmt.Printf("### TIME ELAPSED mean: %d ms\n", mean_rapidnj)
 		fmt.Println(highest_rapidnj, lowest_rapidnj)
 		row := []string{strconv.Itoa(i * taxavalue),
 			strconv.Itoa((highest_rapidnj-int(lowest_rapidnj))/2 + lowest_rapidnj),
 			fmt.Sprintf("%v", (math.Log(float64(highest_rapidnj))-math.Log(float64(lowest_rapidnj)))/2),
 			fmt.Sprintf("%v", mean_rapidnj/iterations)}
 		_ = csvWriter.Write(row)
+		csvWriter.Flush()
+	}
+	csvFile.Close()
+}
+
+func test_record_all_points(distribution string, filename string, maxlength int) {
+	taxavalue := 100
+	csvFile, err := os.Create(filename)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+
+	for i := 1; i < 61; i++ {
+		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
+		mean_rapidnj := 0
+
+		iterations := 10
+		seed := int64(2345)
+		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+		times := []string{strconv.Itoa(i * taxavalue)}
+		for j := 0; j < iterations; j++ {
+			seed++
+			var time_start, time_end int64
+
+			//make first tree
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, maxlength, distribution, seed)
+			original_labels := make([]string, len(labels))
+			copy(original_labels, labels)
+			original_dist_mat := make([][]float64, len(distanceMatrix))
+			for i := range distanceMatrix {
+				original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+				copy(original_dist_mat[i], distanceMatrix[i])
+			}
+
+			labels_cpy := make([]string, len(original_labels))
+			copy(labels_cpy, original_labels)
+
+			dist_mat_cpy := make([][]float64, len(original_dist_mat))
+			for i := range original_dist_mat {
+				dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+				copy(dist_mat_cpy[i], original_dist_mat[i])
+			}
+
+			//run rapidJoin and measure the time on Shifting norm
+			time_start = time.Now().UnixMilli()
+
+			rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
+			time_end = time.Now().UnixMilli()
+			time_measured_rapid := int(time_end - time_start)
+
+			times = append(times, strconv.Itoa(time_measured_rapid))
+
+		}
+		fmt.Printf("### TIME ELAPSED mean: %d ms\n", mean_rapidnj)
+		fmt.Println(highest_rapidnj, lowest_rapidnj)
+		_ = csvWriter.Write(times)
 		csvWriter.Flush()
 	}
 	csvFile.Close()
@@ -272,6 +327,7 @@ func Test_Make_Time_Taxa_CSV() {
 }
 
 func test_all_trees_on_rapidNj() {
+	itrsize := 10
 	taxavalue := 100
 	csvFile, err := os.Create("allTrees_timetest.csv")
 	if err != nil {
@@ -288,32 +344,28 @@ func test_all_trees_on_rapidNj() {
 	csvWriter.Write(labels)
 	NewickFlag = false
 
-	for i := 1; i < 16; i++ {
+	for i := 1; i < 31; i++ {
 		NewickFlag = false
 		var time_start, time_end int64
 		fmt.Println()
-		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+		fmt.Printf("###TAXASIZE: %d\n", 2900+i*taxavalue)
 
 		row := make([]string, 0)
-		row = append(row, strconv.Itoa(int((float64(i * taxavalue)))))
+		row = append(row, strconv.Itoa(int((float64(2900 + i*taxavalue)))))
 		errors_row := make([]string, 0)
 
 		seed := int64(7102)
 		for _, treeType := range treeTypes {
-			seed++
+
 			mean_rapidnj, highest_rapidnj, lowest_rapidnj := 0, 0, 99999999999999999
-			itrsize := 10
-			fmt.Printf(treeType)
+
+			fmt.Println(treeType)
 			fmt.Printf("###BEGINNING RAPIDNJ###\n")
 			for j := 0; j < itrsize; j++ {
-
-				//_, _, distanceMatrix, labels, _, _ := setupDistanceMatrixForTimeTaking(i, taxavalue, treeType)
-
-				_, labels, distanceMatrix := GenerateTree(i, taxavalue, treeType, seed)
-				//run rapidJoin and measure the time on Shifting norm
+				seed++
+				_, labels, distanceMatrix := GenerateTree(2900+i*taxavalue, 100, treeType, seed)
 
 				time_start = time.Now().UnixMilli()
-
 				rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 				time_end = time.Now().UnixMilli()
 				time_measured_rapid := int(time_end - time_start)
@@ -412,5 +464,6 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	Test_make_rapid_u_updates_CSV()
+	test_record_all_points(Cluster_Normal_Distribution, "cluster_bigmax.csv", 1000)
+	test_record_all_points(Spike_Normal_distribution, "spike_bigmax.csv", 1000)
 }
