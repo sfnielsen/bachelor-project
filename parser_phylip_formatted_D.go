@@ -7,9 +7,9 @@ import (
 	"strconv"
 )
 
-func Parse_text() ([][]float64, []string) {
+func Parse_text(file string) ([][]float64, []string) {
 
-	f, err := os.Open("98_sq_phylip_amazon.dist")
+	f, err := os.Open(file)
 
 	if err != nil {
 		fmt.Println(err)

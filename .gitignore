@@ -9,4 +9,5 @@
 #other
 newick.txt
 *.csv
+data_folder
 *.dist
