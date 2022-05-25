@@ -66,7 +66,7 @@ var start, end, total int64
 
 var lookup_updates_count = false
 
-const taxa_lookup_update = 1000
+const taxa_lookup_update = 400
 
 var lookup_matrix = make([][]int, taxa_lookup_update)
 var update_matrix = make([][]int, taxa_lookup_update)
@@ -74,6 +74,11 @@ var update_matrix = make([][]int, taxa_lookup_update)
 //####################################
 //####################################
 //####################################
+
+func mapLookupInSearchHeurisic(blub int, live_records map[int]int) (int, bool) {
+	c_to_cD, ok := live_records[blub]
+	return c_to_cD, ok
+}
 
 func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
 	max_u := MaxIntSlice(u)
@@ -87,17 +92,17 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 				continue
 			}
 
-			if lookup_updates_count && len(D) == taxa_lookup_update {
-				lookup_matrix[r][c]++
-			}
-
 			s := S[r][c]
 
 			if s.value-u[r]-max_u > q_min {
 				break
 			}
 
-			c_to_cD, ok := live_records[s.index_j]
+			if lookup_updates_count && len(D) == taxa_lookup_update {
+				lookup_matrix[r][c]++
+			}
+
+			c_to_cD, ok := mapLookupInSearchHeurisic(s.index_j, live_records)
 
 			//check if dead record
 			if !ok {

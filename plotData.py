@@ -77,17 +77,30 @@ def plotHeatMap(name):
     plt.show()
 
 def findTotalLookups():
-    spike = pd.read_csv('s_update_analysis.csv')
+    spike = pd.read_csv('s_spike_lookup_analysis_400.csv')
     nparray = spike.to_numpy()
     sum = nparray.sum()
-    print("spike sum: ", sum)
+    print("spike_lookup sum: ", sum)
 
-    clust = pd.read_csv('s_clus_update_analysis.csv')
+    clust = pd.read_csv('s_clus_lookup_analysis_400.csv')
     nparray_clust = clust.to_numpy()
-    print(nparray_clust)
     sum1 = nparray_clust.sum()
-    print("clust sum: ", sum1)
+    print("clust_lookup sum: ", sum1)
+
+
+
+
+    spike = pd.read_csv('s_spike_update_analysis_400.csv')
+    nparray = spike.to_numpy()
+    sum = nparray.sum()
+    print("spike_update sum: ", sum)
+
+    clust = pd.read_csv('s_clus_update_analysis_400.csv')
+    nparray_clust = clust.to_numpy()
+    sum1 = nparray_clust.sum()
+    print("clust_update sum: ", sum1)
+
+
 findTotalLookups()
-plotHeatMap('s_clus_lookup_analysis.csv')
-plotHeatMap('s_lookup_analysis.csv')
-plotHeatMap('s_norm_lookup_analysis.csv')
+plotHeatMap("s_spike_lookup_analysis_400.csv")
+plotHeatMap("s_clus_lookup_analysis_400.csv")

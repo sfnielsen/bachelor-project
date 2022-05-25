@@ -234,8 +234,8 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 }
 
 func Test_create_accessed_matrix(t *testing.T) {
-	csvFile, err := os.Create("s_clus_lookup_analysis.csv")
-	csvFile1, err1 := os.Create("s_clus_update_analysis.csv")
+	csvFile, err := os.Create("s_clus_lookup_analysis_400.csv")
+	csvFile1, err1 := os.Create("s_clus_update_analysis_400.csv")
 	if err != nil && err1 != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -261,11 +261,21 @@ func Test_create_accessed_matrix(t *testing.T) {
 		update_matrix[i] = make([]int, len(lookup_matrix))
 	}
 
-	for i := 0; i < 100; i++ {
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	defer pprof.StopCPUProfile()
+	for i := 0; i < 200; i++ {
 		_, labels, distanceMatrix := GenerateTree(taxa, 20, Cluster_Normal_Distribution, seed)
 		rapidNeighbourJoin(distanceMatrix, labels, rapidNeighborJoining)
 		seed++
 	}
+	pprof.StopCPUProfile()
+
 	row_to_append := []string{}
 	for i, row := range lookup_matrix {
 		if i == 0 {
@@ -302,7 +312,7 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	NewickFlag = true
 	//seed := time.Now().UTC().UnixNano()
 	seed := int64(6969)
-	_, labels, distanceMatrix := GenerateTree(taxa, 15, Spike_Normal_distribution, seed)
+	_, labels, distanceMatrix := GenerateTree(taxa, 15, Cluster_Normal_Distribution, seed)
 	time_start = time.Now().UnixMilli()
 	f, err := os.Create("cpu.prof")
 	if err != nil {
