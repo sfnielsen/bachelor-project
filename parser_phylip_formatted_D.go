@@ -27,9 +27,11 @@ func Parse_text(file string) ([][]float64, []string) {
 	var row, phylip_col int
 	var D = make([][]float64, 0)
 	var labels = make([]string, 0)
+
 	for scanner.Scan() {
 
 		word = scanner.Text()
+
 		if word == "" {
 			continue
 		}
@@ -64,6 +66,7 @@ func Parse_text(file string) ([][]float64, []string) {
 				panic(err)
 			}
 			col := phylip_col - 1
+
 			D[row][col] = value
 
 		}
