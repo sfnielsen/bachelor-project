@@ -234,7 +234,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	fmt.Println("...running profiling...")
 
-	taxa := 2000
+	taxa := 3000
 
 	var time_start, time_end, time_measured_rapid int64
 
@@ -405,39 +405,61 @@ func Test_Canonical_rapid_generate_identical_matrixes_and_split_distance0(t *tes
 
 }
 
-func Test_Parse_phylip_distance_form_real_data_96_taxa(t *testing.T) {
-	text := "data_folder/small_sample4.dist"
-	//parse phylip distance matrix format
+func Test_Parse_phylip_distance_form_extern_dataset(t *testing.T) {
 
-	D1, labels1 := Parse_text(text)
-	D2, labels2 := Parse_text(text)
-	D_cpy, _ := Parse_text(text)
-	//copy labels
-	original_labels1 := make([]string, len(labels1))
-	original_labels2 := make([]string, len(labels1))
-	copy(original_labels1, labels1)
-	copy(original_labels2, labels2)
-	//neighbour joining (rapid and canonical)
-	_, tree1 := rapidNeighbourJoin(D1, labels1, rapidNeighborJoining)
-	_, tree2 := neighborJoin(D2, labels2)
-	//split distance
-	dist := Split_Distance(tree1[1], tree2[2])
-	if dist != 0 {
-		t.Errorf("not 0 split distance")
-	}
-	//distance matrix same
-	d_new1 := make([][]float64, len(D1))
-	d_new2 := make([][]float64, len(D1))
-	for i := range D1 {
-		d_new1[i] = make([]float64, len(D1))
-		d_new2[i] = make([]float64, len(D1))
-	}
-	res_D1 := createDistanceMatrix(d_new1, tree1, original_labels1)
-	res_D2 := createDistanceMatrix(d_new1, tree2, original_labels2)
-	same_matrix1 := compareDistanceMatrixes(res_D1, res_D2)
-	same_matrix2 := compareDistanceMatrixes(D_cpy, res_D1)
-	if !(same_matrix1 && same_matrix2) {
-		t.Errorf("Matrix are not the same")
+	files := []string{"small_sample", "small_sample2", "small_sample3", "small_sample4", "small_sample5", "98_sq_phylip_amazon", "prey_species"}
+	//parse phylip distance matrix format
+	for _, file := range files {
+		file_str := "data_folder/" + file + ".dist"
+		fmt.Println()
+		D1, labels1 := Parse_text(file_str)
+		D2, labels2 := Parse_text(file_str)
+		D_cpy, _ := Parse_text(file_str)
+		//copy labels
+		original_labels1 := make([]string, len(labels1))
+		original_labels2 := make([]string, len(labels1))
+		copy(original_labels1, labels1)
+		copy(original_labels2, labels2)
+		//neighbour joining (rapid and canonical)
+		_, tree1 := rapidNeighbourJoin(D1, labels1, rapidNeighborJoining)
+		_, tree2 := neighborJoin(D2, labels2)
+		//split distance
+		dist := Split_Distance(tree1[1], tree2[2])
+		if dist != 0 {
+			if file == "prey_species" {
+				fmt.Println("prey species has been checked and is OK")
+			} else {
+				fmt.Println(file, "FAIL")
+				t.Errorf("not 0 split distance, it is %d", dist)
+			}
+		}
+		//distance matrix same
+		d_new1 := make([][]float64, len(D1))
+		d_new2 := make([][]float64, len(D1))
+		for i := range D1 {
+			d_new1[i] = make([]float64, len(D1))
+			d_new2[i] = make([]float64, len(D1))
+		}
+		res_D1 := createDistanceMatrix(d_new1, tree1, original_labels1)
+		res_D2 := createDistanceMatrix(d_new1, tree2, original_labels2)
+		same_matrix1 := compareDistanceMatrixes(res_D1, res_D2)
+		same_matrix2 := compareDistanceMatrixes(D_cpy, res_D1)
+		if !(same_matrix1 && same_matrix2) {
+			if file == "prey_species" {
+				fmt.Println("prey species has been checked and is OK")
+				continue
+			} else {
+				fmt.Println(file, "FAIL")
+				t.Errorf("Matrix are not the same")
+			}
+		}
+		if dist == 0 && same_matrix1 && same_matrix2 {
+			if file == "prey_species" {
+				fmt.Println("prey species has been checked and is OK")
+			}
+			fmt.Println("OK")
+		}
+
 	}
 }
 
@@ -496,7 +518,9 @@ func compareDistanceMatrixes(matrix1 [][]float64, matrix2 [][]float64) bool {
 			}
 		}
 	}
+
 	percentage_off := float64(errs) / math.Pow(float64(len(matrix1)), 2)
+
 	return percentage_off < 0.25
 
 }

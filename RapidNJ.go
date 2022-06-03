@@ -20,47 +20,6 @@ func initLiveRecords(D [][]float64) map[int]int {
 	return live_records
 }
 
-//function to initialize S matrix
-func initSmatrix(D [][]float64) [][]Tuple {
-	var wg sync.WaitGroup
-
-	n := len(D)
-	S := make([][]Tuple, n)
-	wg.Add(n)
-
-	for i := range S {
-		S[i] = make([]Tuple, n)
-	}
-
-	for i := 0; i < n; i++ {
-		for j := 0; j < n; j++ {
-			var tuple Tuple
-			tuple.value = D[i][j]
-			tuple.index_j = j
-
-			S[i][j] = tuple
-		}
-
-		//sorting row in S
-		go_i := i
-		go sort_S_row(&wg, &S[go_i])
-
-	}
-
-	wg.Wait()
-
-	return S
-}
-
-func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
-	defer wg.Done()
-	row_sort := *row
-	sort.Sort(ByValue(row_sort))
-
-	*row = row_sort
-
-}
-
 type Tuple struct {
 	value   float64
 	index_j int
@@ -86,6 +45,65 @@ func MaxIntSlice(v []float64) (m float64) {
 		}
 	}
 	return m
+}
+
+//function to initialize S matrix
+func initSmatrix(D [][]float64) [][]Tuple {
+	var wg sync.WaitGroup
+
+	n := len(D)
+	S := make([][]Tuple, n)
+	wg.Add(n)
+
+	for i := range S {
+		S[i] = make([]Tuple, n)
+	}
+
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
+			var tuple Tuple
+			tuple.value = D[i][j]
+			tuple.index_j = j
+
+			S[i][j] = tuple
+		}
+
+		//sorting row in S
+		go_i := i
+		go sort_S_row(&wg, &S[go_i], go_i)
+
+	}
+
+	wg.Wait()
+
+	return S
+}
+
+func sort_S_row(wg *sync.WaitGroup, row *[]Tuple, row_no int) {
+	defer wg.Done()
+	row_sort := *row
+	sort.Sort(ByValue(row_sort))
+	//if more than one distance 0, we need to make sure that oneself is the first index.
+	if (len(row_sort) >= 2) && (row_sort[1].value == 0) {
+
+		for i, tuple := range row_sort {
+			if tuple.index_j == row_no {
+				if tuple.value != 0 {
+					fmt.Println("error")
+				}
+
+				row_sort = append(row_sort[:i], row_sort[i+1:]...)
+				row_sort = append([]Tuple{tuple}, row_sort...)
+
+				//swap := reflect.Swapper(row_sort)
+				//swap(0, i)
+				break
+			}
+		}
+	}
+
+	*row = row_sort
+
 }
 
 //function to create initial u array
@@ -273,15 +291,14 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records
 	D_new := <-ch_D
 	live_records_reverse = <-ch_lrr
 
-	//update S
-	S_new := update_S(S, D, p_i, p_j, live_records_reverse)
-
 	live_records = <-ch_lr
+	//update S
+	S_new := update_S(S, D, p_i, p_j, live_records, live_records_reverse)
 
 	return D_new, S_new, live_records, live_records_reverse
 }
 
-func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
+func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records map[int]int, live_records_reverse map[int]int) [][]Tuple {
 	S_new := S
 	//overwrite the row p_i where we want to store merged ij
 	for j := 0; j < len(D[p_i]); j++ {
@@ -300,6 +317,33 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 
 	//sort merged row
 	sort.Sort(ByValue(S_new[p_i]))
+
+	//edgecase if we have more than one distance as 0. We want own distance to be at index 0.
+	if (len(S_new[p_i]) >= 2) && (S_new[p_i][1].value == 0) {
+
+		for i, tuple := range S_new[p_i] {
+
+			c_to_cD, ok := live_records[tuple.index_j]
+			//check if dead record
+			if !ok {
+				continue
+			}
+			if p_i == c_to_cD {
+
+				if tuple.value != 0 {
+					fmt.Println("error")
+				}
+
+				S_new[p_i] = append(S_new[p_i][:i], S_new[p_i][i+1:]...)
+				S_new[p_i] = append([]Tuple{tuple}, S_new[p_i]...)
+
+				//swap := reflect.Swapper(S_new[p_i])
+				//swap(0, i)
+
+				break
+			}
+		}
+	}
 
 	//delete row in S
 	//S_new = append(S[:p_j], S[p_j+1:]...)

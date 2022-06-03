@@ -101,5 +101,6 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 			}
 		}
 	}
+
 	return cur_i, cur_j
 }

@@ -18,7 +18,6 @@ func canonicalNeighborJoining(Q [][]float64, r []float64, D [][]float64, n int) 
 				Q[i][j] = 0
 			} else {
 				Q[i][j] = D[i][j] - r[i] - r[j]
-
 				if Q[i][j] < cur_val {
 					cur_val = Q[i][j]
 					cur_i = i
