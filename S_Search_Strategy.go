@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"sort"
+	"time"
 )
 
 type S_Search_Strategy func(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int)
@@ -80,11 +81,48 @@ func mapLookupInSearchHeurisic(blub int, live_records map[int]int) (int, bool) {
 	return c_to_cD, ok
 }
 
-func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
-	max_u := MaxIntSlice(u)
+func finQMin(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (float64, int, int) {
 	q_min := math.MaxFloat64
 	cur_i, cur_j := -1, -1
 
+	for r, row := range S {
+		for c := range row {
+			if c > 1 {
+				break
+			}
+
+			if c == 0 {
+				continue
+			}
+
+			s := S[r][c]
+
+			time_start = time.Now().UnixNano()
+
+			c_to_cD, ok := mapLookupInSearchHeurisic(s.index_j, live_records)
+			time_end = time.Now().UnixNano()
+			lookupTime += (int(time_end) - int(time_start))
+
+			//check if dead record
+			if !ok {
+				continue
+			}
+
+			q := s.value - u[r] - u[c_to_cD]
+
+			if q < q_min {
+				cur_i = r
+				cur_j = c_to_cD
+				q_min = q
+			}
+		}
+	}
+	return q_min, cur_i, cur_j
+}
+
+func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
+	max_u := MaxIntSlice(u)
+	q_min, cur_i, cur_j := finQMin(u, D, S, live_records)
 	for r, row := range S {
 		for c := range row {
 
@@ -101,8 +139,11 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 			if lookup_updates_count && len(D) == taxa_lookup_update {
 				lookup_matrix[r][c]++
 			}
+			time_start = time.Now().UnixNano()
 
 			c_to_cD, ok := mapLookupInSearchHeurisic(s.index_j, live_records)
+			time_end = time.Now().UnixNano()
+			lookupTime += (int(time_end) - int(time_start))
 
 			//check if dead record
 			if !ok {

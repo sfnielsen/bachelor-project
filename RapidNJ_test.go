@@ -335,6 +335,9 @@ func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	//fmt.Println(total_updates)
 	//fmt.Println(extra_cost)
 	//fmt.Println(total)
+	fmt.Println("init s time", initSTime)
+	fmt.Println("update s time", updateSTime)
+	fmt.Println("lookup time", lookupTime)
 
 	if 1 == 2 {
 		t.Errorf("error")

@@ -7,9 +7,16 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var NewickFlag bool = true
+
+var initSTime int = 0
+var updateSTime int = 0
+var lookupTime int = 0
+
+var time_start, time_end int64
 
 //function to initialize dead records
 func initLiveRecords(D [][]float64) map[int]int {
@@ -22,6 +29,8 @@ func initLiveRecords(D [][]float64) map[int]int {
 
 //function to initialize S matrix
 func initSmatrix(D [][]float64) [][]Tuple {
+	time_start = time.Now().UnixNano()
+
 	var wg sync.WaitGroup
 
 	n := len(D)
@@ -48,7 +57,8 @@ func initSmatrix(D [][]float64) [][]Tuple {
 	}
 
 	wg.Wait()
-
+	time_end = time.Now().UnixNano()
+	initSTime += (int(time_end) - int(time_start))
 	return S
 }
 
@@ -58,7 +68,6 @@ func sort_S_row(wg *sync.WaitGroup, row *[]Tuple) {
 	sort.Sort(ByValue(row_sort))
 
 	*row = row_sort
-
 }
 
 type Tuple struct {
@@ -282,6 +291,7 @@ func createNewDistanceMatrix(S [][]Tuple, live_records map[int]int, live_records
 }
 
 func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse map[int]int) [][]Tuple {
+	time_start = time.Now().UnixNano()
 	S_new := S
 	//overwrite the row p_i where we want to store merged ij
 	for j := 0; j < len(D[p_i]); j++ {
@@ -299,10 +309,8 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged row
-	sort.Sort(ByValue(S_new[p_i]))
-
-	//delete row in S
-	//S_new = append(S[:p_j], S[p_j+1:]...)
+	S_new[p_i] = update_S_sortingfunction(S_new[p_i])
+	//sort.Sort(ByValue(S_new[p_i]))
 
 	S_new[p_j] = nil
 	S_new[p_j] = S_new[len(S_new)-1]
@@ -310,7 +318,16 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records_reverse
 	S_new[len(S_new)-1] = nil
 	S_new = S_new[:len(S_new)-1]
 
+	time_end = time.Now().UnixNano()
+	updateSTime += (int(time_end) - int(time_start))
+
 	return S_new
+}
+
+func update_S_sortingfunction(S_new []Tuple) []Tuple {
+	s := S_new
+	sort.Sort(ByValue(s))
+	return s
 }
 
 func update_D(D [][]float64, p_i int, p_j int, ch chan [][]float64) {

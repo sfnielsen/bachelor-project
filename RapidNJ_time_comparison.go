@@ -378,6 +378,83 @@ func compare_runtime_on_umax_vs_normal_rapidnj() {
 	fmt.Println(U_max_heuristic_time)
 }
 
+func Test_make_rapid_timeDifference_CSV(distribution string, filename string) {
+	initSTime = 0
+	updateSTime = 0
+	lookupTime = 0
+	taxavalue := 100
+	csvFile, err := os.Create(filename)
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+
+	label := []string{"taxa", "normal_inits", "normal_updates", "normal_lookups"}
+	csvWriter.Write(label)
+
+	for i := 1; i < 52; i++ {
+		initSTime = 0
+		updateSTime = 0
+		lookupTime = 0
+
+		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
+		mean_rapidnj := 0
+
+		iterations := 10
+		seed := int64(2345)
+		fmt.Printf("###TAXASIZE: %d\n", i*taxavalue)
+		for j := 0; j < iterations; j++ {
+			seed++
+			var time_startlocal, time_endlocal int64
+
+			//make first tree
+			_, labels, distanceMatrix := GenerateTree(i*taxavalue, 100, distribution, seed)
+			original_labels := make([]string, len(labels))
+			copy(original_labels, labels)
+			original_dist_mat := make([][]float64, len(distanceMatrix))
+			for i := range distanceMatrix {
+				original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+				copy(original_dist_mat[i], distanceMatrix[i])
+			}
+
+			labels_cpy := make([]string, len(original_labels))
+			copy(labels_cpy, original_labels)
+
+			dist_mat_cpy := make([][]float64, len(original_dist_mat))
+			for i := range original_dist_mat {
+				dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+				copy(dist_mat_cpy[i], original_dist_mat[i])
+			}
+
+			//run rapidJoin and measure the time on Shifting norm
+			time_startlocal = time.Now().UnixMilli()
+
+			rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
+			time_endlocal = time.Now().UnixMilli()
+			time_measured_rapid := int(time_endlocal - time_startlocal)
+
+			mean_rapidnj += time_measured_rapid
+			//finding if time was extrema
+			if time_measured_rapid > highest_rapidnj {
+				highest_rapidnj = time_measured_rapid
+			}
+			if time_measured_rapid < int(lowest_rapidnj) {
+				lowest_rapidnj = (time_measured_rapid)
+			}
+
+		}
+		fmt.Printf("### TIME ELAPSED mean: %d ms\n", mean_rapidnj)
+		fmt.Println(highest_rapidnj, lowest_rapidnj)
+		row := []string{strconv.Itoa(i * taxavalue),
+			strconv.Itoa(initSTime / iterations),
+			strconv.Itoa(updateSTime / iterations),
+			strconv.Itoa(lookupTime / iterations)}
+		_ = csvWriter.Write(row)
+		csvWriter.Flush()
+	}
+	csvFile.Close()
+}
+
 // #####################################################################################################################################
 // #####################################################################################################################################
 //helper methods
@@ -411,5 +488,6 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	Test_make_rapid_u_updates_CSV()
+	Test_make_rapid_timeDifference_CSV(Cluster_Normal_Distribution, "cluster_loc11234234ltimes_qmin_heuristic.csv")
+	Test_make_rapid_timeDifference_CSV(Spike_Normal_distribution, "1234.csv")
 }

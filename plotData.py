@@ -101,6 +101,96 @@ def findTotalLookups():
     print("clust_update sum: ", sum1)
 
 
-findTotalLookups()
-plotHeatMap("s_spike_lookup_analysis_400.csv")
-plotHeatMap("s_clus_lookup_analysis_400.csv")
+def plotDifferentTimes():
+    ax = plt.gca()
+
+    normal = pd.read_csv('normal_localtimes.csv')
+    cluster = pd.read_csv('cluster_localtimes_onego.csv')
+    cluster = cluster - [0, 11082483456,31942606926,406299230494]
+    spike = pd.read_csv('spike_localtimes_onego.csv')
+
+
+    normal['normal_updates'] = np.log(normal['normal_updates'])
+    normal['normal_inits'] =   np.log(normal['normal_inits'])
+    normal['normal_lookups'] = np.log(normal['normal_lookups'])
+
+    normal.plot(kind='scatter',marker="x",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization normal")
+    normal.plot(kind='scatter',marker="x",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting normal")
+    normal.plot(kind='scatter',marker="x",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups normal")
+
+
+    cluster['normal_updates'] = np.log(cluster['normal_updates'])
+    cluster['normal_inits'] =   np.log(cluster['normal_inits'])
+    cluster['normal_lookups'] = np.log(cluster['normal_lookups'])
+
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization cluster")
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting cluster")
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups cluster")
+
+    spike['normal_updates'] = np.log(spike['normal_updates'])
+    spike['normal_inits'] =   np.log(spike['normal_inits'])
+    spike['normal_lookups'] = np.log(spike['normal_lookups'])
+
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization spike")
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting spike")
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups spike")
+    plt.show()
+
+
+def plotDifferentTimes():
+    ax = plt.gca()
+
+    cluster = pd.read_csv('cluster_localtimes_onego.csv')
+    taxa = cluster['taxa']
+    cluster = cluster - [0, 11082483456,31942606926,406299230494]
+    cluster = cluster.diff()
+    cluster['taxa'] = taxa
+    spike = pd.read_csv('spike_localtimes_onego.csv')
+    spike = spike.diff()
+    spike['taxa'] = taxa
+    print(spike)
+
+
+
+    cluster['normal_updates'] = np.log(cluster['normal_updates'])
+    cluster['normal_inits'] =   np.log(cluster['normal_inits'])
+    cluster['normal_lookups'] = np.log(cluster['normal_lookups'])
+
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization cluster")
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting cluster")
+    cluster.plot(kind='scatter',marker=".",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups cluster")
+
+    spike['normal_updates'] = np.log(spike['normal_updates'])
+    spike['normal_inits'] =   np.log(spike['normal_inits'])
+    spike['normal_lookups'] = np.log(spike['normal_lookups'])
+
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization spike")
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting spike")
+    spike.plot(kind='scatter',marker="o",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups spike")
+
+
+    cluster2 = pd.read_csv('cluster_localtimes_qmin_heuristic.csv')
+    spike2 = pd.read_csv('spike_localtimes_qmin_heuristic.csv')
+
+    cluster2['normal_updates'] = np.log(cluster2['normal_updates'])
+    cluster2['normal_inits'] =   np.log(cluster2['normal_inits'])
+    cluster2['normal_lookups'] = np.log(cluster2['normal_lookups'])
+
+    cluster2.plot(kind='scatter',marker="x",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization cluster2")
+    cluster2.plot(kind='scatter',marker="x",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting cluster2")
+    cluster2.plot(kind='scatter',marker="x",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups cluster2")
+
+    spike2['normal_updates'] = np.log(spike2['normal_updates'])
+    spike2['normal_inits'] =   np.log(spike2['normal_inits'])
+    spike2['normal_lookups'] = np.log(spike2['normal_lookups'])
+
+    spike2.plot(kind='scatter',marker="^",x='taxa',y='normal_inits',ax=ax,color="red", label="initialization spike2")
+    spike2.plot(kind='scatter',marker="^",x='taxa',y='normal_updates',ax=ax, color="blue", label="update sorting spike2")
+    spike2.plot(kind='scatter',marker="^",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups spike2")
+
+    plt.show()
+
+
+
+
+plotDifferentTimes()
