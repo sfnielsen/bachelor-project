@@ -90,7 +90,7 @@ func Test_Compare_runtimes_canonical_against_rapid() {
 }
 func Test_make_rapid_u_updates_CSV() {
 	taxavalue := 100
-	csvFile, err := os.Create("canonical_time.csv")
+	csvFile, err := os.Create("radix_time.csv")
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -99,7 +99,7 @@ func Test_make_rapid_u_updates_CSV() {
 	label := []string{"taxa", "rapidnj", "rapidnj_error", "mean"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 48; i++ {
+	for i := 1; i < 63; i++ {
 		highest_rapidnj, lowest_rapidnj := 0, 9999999999999999
 		mean_rapidnj := 0
 
@@ -463,7 +463,5 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	test_record_all_points(Normal_distribution, "normal_allpoints.csv", 100)
-	test_record_all_points(Normal_distribution, "normal_bigmax.csv", 1000)
 	Test_make_rapid_u_updates_CSV()
 }

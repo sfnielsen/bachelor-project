@@ -234,7 +234,7 @@ func TestRapidNJ20TaxaRandomDistMatrix100Times(t *testing.T) {
 func Test_Profiling_on_rapidNeighbourJoin(t *testing.T) {
 	fmt.Println("...running profiling...")
 
-	taxa := 2000
+	taxa := 5000
 
 	var time_start, time_end, time_measured_rapid int64
 

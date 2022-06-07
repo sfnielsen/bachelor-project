@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"sort"
 	"strconv"
 	"sync"
 )
@@ -82,9 +81,9 @@ func initSmatrix(D [][]float64) [][]Tuple {
 func sort_S_row(wg *sync.WaitGroup, row *[]Tuple, row_no int) {
 	defer wg.Done()
 	row_sort := *row
-	//radixsort(row_sort)
+	radixsort(row_sort)
 
-	sort.Sort(ByValue(row_sort))
+	//sort.Sort(ByValue(row_sort))
 	//if more than one distance 0, we need to make sure that oneself is the first index.
 	if (len(row_sort) >= 2) && (row_sort[1].value == 0) {
 
@@ -318,9 +317,9 @@ func update_S(S [][]Tuple, D [][]float64, p_i int, p_j int, live_records map[int
 	S_new[p_i] = S_new[p_i][:len(D)-1]
 
 	//sort merged row
-	//radixsort(S_new[p_i])
+	radixsort(S_new[p_i])
 
-	sort.Sort(ByValue(S_new[p_i]))
+	//sort.Sort(ByValue(S_new[p_i]))
 
 	//edgecase if we have more than one distance as 0. We want own distance to be at index 0.
 	if (len(S_new[p_i]) >= 2) && (S_new[p_i][1].value == 0) {

@@ -6,16 +6,6 @@ import (
 )
 
 const digit = 8
-const maxbit = -1 << 31
-
-/*
-func main() {
-	var data = []float64{421.123, 15.121231233, 175.123123123, 90.123, 2.11, 214.33, 52.11, 166.33, 123123123.3333333}
-	fmt.Println("\n--- Unsorted --- \n\n", data)
-	radixsort(data)
-	fmt.Println("\n--- Sorted ---\n\n", data, "\n")
-}
-*/
 
 func radixsort(data []Tuple) {
 	buf := bytes.NewBuffer(nil)
@@ -28,24 +18,23 @@ func radixsort(data []Tuple) {
 		ds[i] = b
 	}
 
-	countingSort := make([][][]byte, 256)
+	bucket := make([][][]byte, 256)
 	tuples := make([][]Tuple, 256)
 
 	for i := 0; i < digit; i++ {
 		for asdf, b := range ds {
-			countingSort[b[i]] = append(countingSort[b[i]], b)
+			bucket[b[i]] = append(bucket[b[i]], b)
 			tuples[b[i]] = append(tuples[b[i]], data[asdf])
 		}
 		j := 0
-		for k, bs := range countingSort {
+		for k, bs := range bucket {
 			copy(ds[j:], bs)
 			copy(data[j:], tuples[k])
 
 			j += len(bs)
 
-			countingSort[k] = bs[:0]
+			bucket[k] = bs[:0]
 			tuples[k] = tuples[k][:0]
-
 		}
 	}
 	/*
