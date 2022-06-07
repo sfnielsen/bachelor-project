@@ -122,7 +122,7 @@ func finQMin(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) 
 
 func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
 	max_u := MaxIntSlice(u)
-	q_min, cur_i, cur_j := finQMin(u, D, S, live_records)
+	q_min, cur_i, cur_j := math.MaxFloat64, 0, 0
 	for r, row := range S {
 		for c := range row {
 
@@ -132,7 +132,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 
 			s := S[r][c]
 
-			if s.value-u[r]-max_u > q_min {
+			if s.value-u[r]-max_u > last_q_min*0.98 {
 				break
 			}
 
@@ -158,6 +158,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 				}
 				cur_i = r
 				cur_j = c_to_cD
+				last_q_min = q_min
 				q_min = q
 
 			}

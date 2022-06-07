@@ -382,7 +382,7 @@ func Test_make_rapid_timeDifference_CSV(distribution string, filename string) {
 	initSTime = 0
 	updateSTime = 0
 	lookupTime = 0
-	taxavalue := 100
+	taxavalue := 500
 	csvFile, err := os.Create(filename)
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
@@ -392,7 +392,7 @@ func Test_make_rapid_timeDifference_CSV(distribution string, filename string) {
 	label := []string{"taxa", "normal_inits", "normal_updates", "normal_lookups"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 52; i++ {
+	for i := 1; i < 9; i++ {
 		initSTime = 0
 		updateSTime = 0
 		lookupTime = 0
@@ -488,6 +488,6 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	Test_make_rapid_timeDifference_CSV(Cluster_Normal_Distribution, "cluster_loc11234234ltimes_qmin_heuristic.csv")
-	Test_make_rapid_timeDifference_CSV(Spike_Normal_distribution, "1234.csv")
+	Test_make_rapid_timeDifference_CSV(Cluster_Normal_Distribution, "cluster_times_lastq_heuristic.csv")
+	Test_make_rapid_timeDifference_CSV(Spike_Normal_distribution, "spike_times_lastq_heuristic.csv")
 }

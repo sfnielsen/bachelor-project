@@ -148,9 +148,6 @@ def plotDifferentTimes():
     spike = pd.read_csv('spike_localtimes_onego.csv')
     spike = spike.diff()
     spike['taxa'] = taxa
-    print(spike)
-
-
 
     cluster['normal_updates'] = np.log(cluster['normal_updates'])
     cluster['normal_inits'] =   np.log(cluster['normal_inits'])
