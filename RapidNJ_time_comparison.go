@@ -392,7 +392,7 @@ func Test_make_rapid_timeDifference_CSV(distribution string, filename string) {
 	label := []string{"taxa", "normal_inits", "normal_updates", "normal_lookups"}
 	csvWriter.Write(label)
 
-	for i := 1; i < 9; i++ {
+	for i := 9; i < 12; i++ {
 		initSTime = 0
 		updateSTime = 0
 		lookupTime = 0
@@ -488,6 +488,6 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	Test_make_rapid_timeDifference_CSV(Cluster_Normal_Distribution, "cluster_times_lastq_heuristic.csv")
-	Test_make_rapid_timeDifference_CSV(Spike_Normal_distribution, "spike_times_lastq_heuristic.csv")
+	Test_make_rapid_timeDifference_CSV(Cluster_Normal_Distribution, "cluster_times_lastrow_heuristic2.csv")
+	Test_make_rapid_timeDifference_CSV(Spike_Normal_distribution, "spike_times_lastrow_heuristic2.csv")
 }

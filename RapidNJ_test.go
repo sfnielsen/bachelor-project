@@ -349,7 +349,7 @@ func TestRapidNJWithRandomDistanceMatrix(t *testing.T) {
 	seed := time.Now().UTC().UnixNano()
 	for i := 0; i < 1; i++ {
 		seed++
-		_, labels, distanceMatrix := GenerateTree(300, 40, Spike_Normal_distribution, seed)
+		_, labels, distanceMatrix := GenerateTree(2000, 40, Spike_Normal_distribution, seed)
 		original_labels := make([]string, len(labels))
 		copy(original_labels, labels)
 

@@ -61,7 +61,6 @@ var old_i int = -1
 var column_depth map[int]int = make(map[int]int)
 
 var extra_cost int
-var last_q_min float64 = math.MaxFloat64
 
 var start, end, total int64
 
@@ -120,9 +119,46 @@ func finQMin(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) 
 	return q_min, cur_i, cur_j
 }
 
+var last_q_min_i int = -1
+var secondLast_q_min_i int = 1
+
 func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records map[int]int) (int, int) {
 	max_u := MaxIntSlice(u)
-	q_min, cur_i, cur_j := last_q_min, 0, 0
+	q_min, cur_i, cur_j := math.MaxFloat64, -1, -1
+
+	if secondLast_q_min_i != -1 {
+		for c := range S[secondLast_q_min_i] {
+			if c == 0 {
+				continue
+			}
+
+			s := S[secondLast_q_min_i][c]
+
+			if s.value-u[secondLast_q_min_i]-max_u > q_min {
+				break
+			}
+
+			c_to_cD, ok := mapLookupInSearchHeurisic(s.index_j, live_records)
+
+			//check if dead record
+			if !ok {
+				continue
+			}
+
+			q := s.value - u[secondLast_q_min_i] - u[c_to_cD]
+
+			if q < q_min {
+				cur_i = secondLast_q_min_i
+				cur_j = c_to_cD
+
+				q_min = q
+			}
+		}
+
+	}
+	secondLast_q_min_i = -1
+	last_q_min_i = -1
+
 	for r, row := range S {
 		for c := range row {
 
@@ -156,9 +192,12 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 				if lookup_updates_count && len(D) == taxa_lookup_update {
 					update_matrix[r][c]++
 				}
+				secondLast_q_min_i = last_q_min_i
+				last_q_min_i = cur_i
+
 				cur_i = r
 				cur_j = c_to_cD
-				last_q_min = q_min
+
 				q_min = q
 
 			}

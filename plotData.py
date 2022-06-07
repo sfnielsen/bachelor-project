@@ -166,8 +166,8 @@ def plotDifferentTimes():
     spike.plot(kind='scatter',marker="o",x='taxa',y='normal_lookups',ax=ax, color="green", label="# lookups spike")
 
 
-    cluster2 = pd.read_csv('cluster_localtimes_qmin_heuristic.csv')
-    spike2 = pd.read_csv('spike_localtimes_qmin_heuristic.csv')
+    cluster2 = pd.read_csv('cluster_times_lastrow_heuristic.csv')
+    spike2 = pd.read_csv('spike_times_lastrow_heuristic.csv')
 
     cluster2['normal_updates'] = np.log(cluster2['normal_updates'])
     cluster2['normal_inits'] =   np.log(cluster2['normal_inits'])
