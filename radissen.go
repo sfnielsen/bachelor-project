@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 )
 
 const digit = 8
@@ -21,7 +22,14 @@ func radixsort(data []Tuple) {
 	buf := bytes.NewBuffer(nil)
 	ds := make([][]byte, len(data))
 
+	placementMap := make(map[float64]Tuple)
+
 	for i, e := range data {
+		if _, ok := placementMap[e.value]; ok {
+			placementMap[e.value+0.0000000000000001] = e
+		} else {
+			placementMap[e.value] = e
+		}
 		binary.Write(buf, binary.LittleEndian, e.value)
 		b := make([]byte, digit)
 		buf.Read(b)
@@ -36,13 +44,14 @@ func radixsort(data []Tuple) {
 			countingSort[b[i]] = append(countingSort[b[i]], b)
 			tuples[b[i]] = append(tuples[b[i]], data[asdf])
 		}
+		fmt.Println(data)
 		j := 0
 		for k, bs := range countingSort {
 			copy(ds[j:], bs)
 			copy(data[j:], tuples[k])
 
 			j += len(bs)
-
+			
 			countingSort[k] = bs[:0]
 			tuples[k] = tuples[k][:0]
 

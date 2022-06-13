@@ -157,6 +157,57 @@ func Test_make_rapid_u_updates_CSV() {
 	csvFile.Close()
 }
 
+func test_q_behavior() {
+	taxavalue := 20000
+
+	csvFile, err := os.Create("q_behavior.csv")
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	csvWriter := csv.NewWriter(csvFile)
+
+	label := []string{"iteration", "q_min", "heuristic1", "actual_q"}
+	csvWriter.Write(label)
+
+	seed := int64(1234)
+	//make first tree
+	fmt.Println("blub")
+	_, labels, distanceMatrix := GenerateTree(taxavalue, 100, Normal_distribution, seed)
+	original_labels := make([]string, len(labels))
+	copy(original_labels, labels)
+	original_dist_mat := make([][]float64, len(distanceMatrix))
+	for i := range distanceMatrix {
+		original_dist_mat[i] = make([]float64, len(distanceMatrix[i]))
+		copy(original_dist_mat[i], distanceMatrix[i])
+	}
+
+	labels_cpy := make([]string, len(original_labels))
+	copy(labels_cpy, original_labels)
+
+	dist_mat_cpy := make([][]float64, len(original_dist_mat))
+	for i := range original_dist_mat {
+		dist_mat_cpy[i] = make([]float64, len(original_dist_mat[i]))
+		copy(dist_mat_cpy[i], original_dist_mat[i])
+	}
+
+	//run rapidJoin
+	fmt.Println("hej1")
+	rapidNeighbourJoin(dist_mat_cpy, labels_cpy, rapidNeighborJoining)
+	for i := 0; i < len(q_mins); i++ {
+		fmt.Println("hej")
+		row := []string{strconv.Itoa(i * taxavalue),
+			strconv.Itoa(i),
+			fmt.Sprintf("%v", q_mins[i]),
+			fmt.Sprintf("%v", heuristic1[i]),
+			fmt.Sprintf("%v", heuristic2[i])}
+		_ = csvWriter.Write(row)
+		csvWriter.Flush()
+	}
+
+	csvFile.Close()
+
+}
+
 func test_record_all_points(distribution string, filename string, maxlength int) {
 	taxavalue := 100
 	csvFile, err := os.Create(filename)
@@ -463,7 +514,5 @@ func compare_U_max_sorting() {
 }
 
 func main() {
-	test_record_all_points(Normal_distribution, "normal_allpoints.csv", 100)
-	test_record_all_points(Normal_distribution, "normal_bigmax.csv", 1000)
-	Test_make_rapid_u_updates_CSV()
+	test_q_behavior()
 }

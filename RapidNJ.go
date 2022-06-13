@@ -144,7 +144,6 @@ func update_u(D [][]float64, u []float64, i int, j int) []float64 {
 
 		//also add value to ij merge
 		u[i] += new_dist
-
 	}
 	u[i] /= float64(n - 3)
 

@@ -59,6 +59,10 @@ var total_lookups, total_updates int
 var old_i int = -1
 var column_depth map[int]int = make(map[int]int)
 
+var q_mins []float64 = make([]float64, 0)
+var heuristic1 []float64 = make([]float64, 0)
+var heuristic2 []float64 = make([]float64, 0)
+
 var extra_cost int
 var last_q_min float64 = math.MaxFloat64
 
@@ -74,6 +78,7 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 	cur_i, cur_j := -1, -1
 	for r, row := range S {
 		for c := range row {
+
 			if c == 0 {
 				continue
 			}
@@ -92,6 +97,13 @@ func rapidNeighborJoining(u []float64, D [][]float64, S [][]Tuple, live_records 
 			}
 
 			q := s.value - u[r] - u[c_to_cD]
+
+			if len(D) == 2000 {
+				heuristic1val := s.value - u[r] - max_u
+				q_mins = append(q_mins, q_min)
+				heuristic1 = append(heuristic1, heuristic1val)
+				heuristic2 = append(heuristic1, q)
+			}
 
 			if q < q_min {
 				cur_i = r
